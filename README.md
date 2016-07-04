@@ -74,7 +74,7 @@ wget http://<host>/rest/v0.0/getInteractions/<string:genome_id>/<string:dataset>
 ## List chromosomes
 List the chromosomes at the given resolution
 ```
-wet http://<host>/rest/v0.0/getInteractions/<string:genome_id>/<string:dataset>/<int:resolution>
+wget http://<host>/rest/v0.0/getInteractions/<string:genome_id>/<string:dataset>/<int:resolution>
 ```
 
 ## Size of the chromosome
@@ -85,12 +85,12 @@ wget http://<host>/rest/v0.0/getInteractions/<string:genome_id>/<string:dataset>
 
 ## Get interactions from chromosome range
 ```
-http://<host>/rest/v0.0/getInteractions/<string:genome_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:start>/<int:end>
+wget http://<host>/rest/v0.0/getInteractions/<string:genome_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:start>/<int:end>
 ```
 
 ## Get individual value
 ```
-http://<host>/rest/v0.0/getValue/<string:genome_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:bin_id>
+wget http://<host>/rest/v0.0/getValue/<string:genome_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:bin_id>
 ```
 
 
