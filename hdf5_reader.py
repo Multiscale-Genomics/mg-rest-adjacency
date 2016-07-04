@@ -64,6 +64,13 @@ class hdf5:
             chr_start = self.chr_param[genome][chr_id]["bins"][int(resolution)][1]
             if index > chr_start and index < chr_end:
                 return chr_id
+    
+    def get_genomes(self):
+        datasets = json.loads(open('datasets.json').read())
+        out = []
+        for i in datasets.keys():
+            out.append({"genome_id": i})
+        return out
         
     def get_datasets(self, genome_id):
         datasets = json.loads(open('datasets.json').read())

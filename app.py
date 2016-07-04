@@ -31,6 +31,12 @@ class GetValue(Resource):
             }
         )
 
+class GetGenomes(Resource):
+    def get(self):
+        h5 = hdf5()
+        chr_param = h5.get_genomes()
+        return jsonify(chr_param)
+
 class GetDatasets(Resource):
     def get(self, genome_id):
         h5 = hdf5()
@@ -81,7 +87,11 @@ class GetInteractions(Resource):
 api.add_resource(GetChromosomes, "/rest/v0.0/getChromosomes/<string:genome_id>", endpoint="chromosomes")
 
 # /rest/v0.0/getInteractions
-#   List the available datasets with links
+#   List the available genomes for which there are datasets available
+api.add_resource(GetGenomes, "/rest/v0.0/getInteractions", endpoint='genomes')
+
+# /rest/v0.0/getInteractions
+#   List the available datasets for a given genome with links
 api.add_resource(GetDatasets, "/rest/v0.0/getInteractions/<string:genome_id>", endpoint='datasets')
 
 # /rest/v0.0/getInteractions
