@@ -62,35 +62,35 @@ Place this in the boot scripts to get intialised as a service.
 # RESTful API
 ## List datasets
 ```
-wget http://<host>/rest/v0.0/getInteractions/<string:genome_id>
+wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>
 ```
 
 ## List available resolutions
 List the avaiable resolutions the are loaded for a given dataset
 ```
-wget http://<host>/rest/v0.0/getInteractions/<string:genome_id>/<string:dataset>
+wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>
 ```
 
 ## List chromosomes
 List the chromosomes at the given resolution
 ```
-wget http://<host>/rest/v0.0/getInteractions/<string:genome_id>/<string:dataset>/<int:resolution>
+wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>
 ```
 
 ## Size of the chromosome
 Show the size of the chromosome, the number of bins and a link to a minimal set
 ```
-wget http://<host>/rest/v0.0/getInteractions/<string:genome_id>/<string:dataset>/<int:resolution>/<string:chr_id>
+wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>
 ```
 
 ## Get interactions from chromosome range
 ```
-wget http://<host>/rest/v0.0/getInteractions/<string:genome_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:start>/<int:end>
+wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:start>/<int:end>
 ```
 
 ## Get individual value
 ```
-wget http://<host>/rest/v0.0/getValue/<string:genome_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:bin_id>
+wget http://<host>/rest/v0.0/getValue/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:bin_i>/<int:bin_j>
 ```
 
 
