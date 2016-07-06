@@ -28,19 +28,24 @@ The dataset files for each of the genomes:
 - datasets.json
 ```
 {
-"<genome_id>": ["<author><year>"]
+    "taxon_id": {
+        "9606": {
+            "accession": {
+                "GCA_000001405.14": {
+                    "datasets": ["rao2014"],
+                    "chromosomes": [
+                        ["1", 249250621],
+                        ["2", 243199373],
+                        ["3", 198022430],
+                        ["4", 191154276],
+                        ["5", 180915260],
+                        ...
+                    ]
+                }
+            }
+        }
+    }
 }
-```
-
-Matching genome size file for each genome in the datasets.json file:
-- <genome_id>.size
-```
-1       249250621
-2       243199373
-3       198022430
-4       191154276
-5       180915260
-...
 ```
 
 Matching HDF5 files listed in the datasets.json file
@@ -60,6 +65,16 @@ python app.py
 Place this in the boot scripts to get intialised as a service.
 
 # RESTful API
+## List taxon IDs
+```
+wget http://<host>/rest/v0.0/getInteractions/
+```
+
+## List accessions
+```
+wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>
+```
+
 ## List datasets
 ```
 wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>
@@ -86,6 +101,19 @@ wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession
 ## Get interactions from chromosome range
 ```
 wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:start>/<int:end>
+```
+### Optional arguments:
+- limit_region
+  - Permitted values are:
+    - "all" (default): Any interactions
+    - "intra": Interactions only within the same chromosome
+    - "inter": Interactions only with other chromosomes
+- limit_chr
+  - Interactions with a specified chromosome
+
+```
+wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>?limit_region=intra
+wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chrA_id>?limit_chr=<string:chrB_id>
 ```
 
 ## Get individual value
