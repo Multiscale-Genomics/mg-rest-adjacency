@@ -125,6 +125,7 @@ wget -S -q --header "Accept: application/tsv" http://<host>/rest/v0.0/getInterac
 ```
 
 will return the interactions where columns represent:
+
 1. Chromosome 1
 2. Starting position for chromosome 1
 3. Chromosome 2
