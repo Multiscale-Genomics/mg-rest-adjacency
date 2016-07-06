@@ -9,6 +9,9 @@ api = Api(app)
 
 @api.representation('application/tsv')
 def output_tsv(data, code, headers=None):
+    """
+    TSV representation for interactions
+    """
     if request.endpoint == "values":
         outstr = ''
         for v in data["values"]:
