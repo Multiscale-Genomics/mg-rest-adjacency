@@ -11,7 +11,7 @@ class datasets:
     
     def __init__(self):
         # Initialise the chr_param as an empty index when the service is started
-        self.datasets = json.loads(open('datasets_02.json').read())
+        self.datasets = json.loads(open('datasets.json').read())
         self.chr_param = {}
         self.load_datasets()
     
