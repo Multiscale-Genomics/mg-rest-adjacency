@@ -119,7 +119,8 @@ wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession
 ### Interactions in TSV format
 By modifying the header to request `application/tsv` the following request:
 
-`wget -S -q --header "Accept: application/tsv" http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chrA_id>/<int:start>/<int:end> -O test.out.tsv``
+```
+wget -S -q --header "Accept: application/tsv" http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chrA_id>/<int:start>/<int:end> -O test.out.tsv``
 
 ```
 
