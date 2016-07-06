@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, make_response, request
 from flask_restful import Api, Resource
 
 from datasets import datasets
@@ -7,6 +7,15 @@ from hdf5_reader import hdf5
 app = Flask(__name__)
 api = Api(app)
 
+@api.representation('application/tsv')
+def output_tsv(data, code, headers=None):
+    if request.endpoint == "values":
+        outstr = ''
+        for v in data["values"]:
+            outstr += str(v["chrA"]) + "\t" + str(v["startA"]) + "\t" + str(v["chrB"]) + "\t" + str(v["startB"]) + "\t" + str(v["value"]) + "\n"
+        resp = make_response(outstr, code)
+    resp.headers.extend(headers or {})
+    return resp
 
 class GetTaxons(Resource):
     """

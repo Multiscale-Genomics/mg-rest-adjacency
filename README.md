@@ -112,9 +112,23 @@ wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession
   - Interactions with a specified chromosome
 
 ```
-wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>?limit_region=intra
-wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chrA_id>?limit_chr=<string:chrB_id>
+wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:start>/<int:end>?limit_region=intra
+wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chrA_id>/<int:start>/<int:end>?limit_chr=<string:chrB_id>
 ```
+
+### Interactions in TSV format
+By modifying the header to request `application/tsv` the following request:
+
+`wget -S -q --header "Accept: application/tsv" http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chrA_id>/<int:start>/<int:end> -O test.out.tsv``
+
+```
+
+will return the interactions where columns represent:
+1. Chromosome 1
+2. Starting position for chromosome 1
+3. Chromosome 2
+4. Starting position for chromosome 2
+5. Value
 
 ## Get individual value
 ```
