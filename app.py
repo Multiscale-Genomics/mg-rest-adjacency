@@ -18,15 +18,13 @@ class GetTaxons(Resource):
         taxons = ds.getTaxon()
         request_path = request.path
         rp = request_path.split("/")
-        return jsonify(
-            {
-                '_links': {
-                    'self': request.base_url,
-                    'child': [request.base_url + "/" + str(d) for d in taxons]
-                },
-                'taxons': taxons
-            }
-        )
+        return {
+            '_links': {
+                'self': request.base_url,
+                'child': [request.base_url + "/" + str(d) for d in taxons]
+            },
+            'taxons': taxons
+        }
 
 class GetAccessions(Resource):
     """
@@ -39,16 +37,14 @@ class GetAccessions(Resource):
         accessions = ds.getAccessions(taxon_id)
         request_path = request.path
         rp = request_path.split("/")
-        return jsonify(
-            {
-                '_links': {
-                    'self': request.base_url,
-                    'child': [request.base_url + "/" + str(d) for d in accessions],
-                    'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id)
-                },
-                'accessions': accessions
-            }
-        )
+        return {
+            '_links': {
+                'self': request.base_url,
+                'child': [request.base_url + "/" + str(d) for d in accessions],
+                'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id)
+            },
+            'accessions': accessions
+        }
 
 class GetDatasets(Resource):
     """
@@ -61,16 +57,14 @@ class GetDatasets(Resource):
         dataset = ds.getDatasets(taxon_id, accession_id)
         request_path = request.path
         rp = request_path.split("/")
-        return jsonify(
-            {
-                '_links': {
-                    'self': request.base_url,
-                    'child': [request.base_url + "/" + str(d) for d in dataset],
-                    'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id)
-                },
-                'datasets': dataset
-            }
-        )
+        return {
+            '_links': {
+                'self': request.base_url,
+                'child': [request.base_url + "/" + str(d) for d in dataset],
+                'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id)
+            },
+            'datasets': dataset
+        }
 
 class GetResolutions(Resource):
     """
@@ -86,18 +80,16 @@ class GetResolutions(Resource):
         children = []
         for c in chr_param["resolutions"]:
             children.append(request.base_url + "/" + c)
-        return jsonify(
-            {
-                '_links': {
-                    'self': request.base_url,
-                    'child': children,
-                    'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset)
-                },
-                'dataset': dataset,
-                'accession_id': accession_id,
-                'resolutions': chr_param['resolutions'],
-            }
-        )
+        return {
+            '_links': {
+                'self': request.base_url,
+                'child': children,
+                'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset)
+            },
+            'dataset': dataset,
+            'accession_id': accession_id,
+            'resolutions': chr_param['resolutions'],
+        }
 
 class GetChromosomes(Resource):
     """
@@ -115,16 +107,14 @@ class GetChromosomes(Resource):
         for c in chr_param:
           children.append(request.base_url + "/" + c[0])
           chromosomes.append(c[0])
-        return jsonify(
-            {
-                '_links': {
-                    'self': request.base_url,
-                    'child': children,
-                    'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset) + '/' + str(resolution)
-                },
-                'chromosomes': chromosomes
-            }
-        )
+        return {
+            '_links': {
+                'self': request.base_url,
+                'child': children,
+                'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset) + '/' + str(resolution)
+            },
+            'chromosomes': chromosomes
+        }
 
 class GetChromosome(Resource):
     """
@@ -139,18 +129,16 @@ class GetChromosome(Resource):
         
         request_path = request.path
         rp = request_path.split("/")
-        return jsonify(
-            {
-                '_links': {
-                    'self': request.base_url,
-                    'child': request.base_url + "/0/" + str(resolution),
-                    'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset) + '/' + str(resolution) + "/" + str(chr_id)
-                },
-                'chromosome': chr_id,
-                "bins": chr_param["bins"],
-                "size": chr_param["size"]
-            }
-        )
+        return {
+            '_links': {
+                'self': request.base_url,
+                'child': request.base_url + "/0/" + str(resolution),
+                'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset) + '/' + str(resolution) + "/" + str(chr_id)
+            },
+            'chromosome': chr_id,
+            "bins": chr_param["bins"],
+            "size": chr_param["size"]
+        }
 
 class GetInteractions(Resource):
     """
@@ -171,23 +159,25 @@ class GetInteractions(Resource):
         x = h5.get_range(ds, dataset, resolution, accession_id, chr_id, start, end, limit_region, limit_chr, value_url)
         #app.logger.warn(x["log"])
         
-        return jsonify(
-            {
-                '_links': {
-                    'self': request.url,
-                    'parent': request.url_root + '/rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset) + '/' + str(resolution) + "/" + str(chr_id)
-                },
-                'dataset': dataset,
-                'resolution': resolution,
-                'genome': accession_id,
-                'chr_id': chr_id,
-                'start': start,
-                'end': end,
-                'limit_region': limit_region,
-                'limit_chr': limit_chr,
-                'values': x["results"]
-            }
-        )
+        return {
+            '_links': {
+                'self': request.url,
+                'parent': request.url_root + '/rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset) + '/' + str(resolution) + "/" + str(chr_id)
+            },
+            'dataset': dataset,
+            'resolution': resolution,
+            'genome': accession_id,
+            'chr_id': chr_id,
+            'start': start,
+            'end': end,
+            'limit_region': limit_region,
+            'limit_chr': limit_chr,
+            'interaction_count': len(x["results"]),
+            #'page_id': 
+            #'pages': 
+            #'page_size': 
+            'values': x["results"]
+        }
 
 class GetValue(Resource):
     """
@@ -206,21 +196,19 @@ class GetValue(Resource):
         request_path = request.path
         rp = request_path.split("/")
         
-        return jsonify(
-            {
-                '_links': {
-                  'self': request.url_root + 'rest/' + str(rp[2]) + '/getValue/' + str(taxon_id) + "/" + str(accession_id) + "/" + str(dataset) + "/" + str(resolution) + "/" + str(bin_i) + "/" + str(bin_j)
-                },
-                'genome': accession_id,
-                'chrA': chrA_id,
-                'chrB': chrB_id,
-                'dataset': dataset,
-                'resolution': resolution,
-                'bin_i': bin_i,
-                'bin_j': bin_j,
-                'value': int(value)
-            }
-        )
+        return {
+            '_links': {
+              'self': request.url_root + 'rest/' + str(rp[2]) + '/getValue/' + str(taxon_id) + "/" + str(accession_id) + "/" + str(dataset) + "/" + str(resolution) + "/" + str(bin_i) + "/" + str(bin_j)
+            },
+            'genome': accession_id,
+            'chrA': chrA_id,
+            'chrB': chrB_id,
+            'dataset': dataset,
+            'resolution': resolution,
+            'bin_i': bin_i,
+            'bin_j': bin_j,
+            'value': int(value)
+        }
 
 """
 Define the URIs and their matching methods
