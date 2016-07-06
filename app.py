@@ -9,6 +9,10 @@ api = Api(app)
 
 
 class GetTaxons(Resource):
+    """
+    Class to handle the http requests for retrieving a list of taxon IDs
+    """
+    
     def get(self):
         ds = datasets()
         taxons = ds.getTaxon()
@@ -25,6 +29,11 @@ class GetTaxons(Resource):
         )
 
 class GetAccessions(Resource):
+    """
+    Class to handle the http requests for retrieving a list of accessions for a 
+    given taxonic ID
+    """
+    
     def get(self, taxon_id):
         ds = datasets()
         accessions = ds.getAccessions(taxon_id)
@@ -42,6 +51,11 @@ class GetAccessions(Resource):
         )
 
 class GetDatasets(Resource):
+    """
+    Class to handle the http requests for retrieving a list of datasets for a
+    given accession
+    """
+    
     def get(self, taxon_id, accession_id):
         ds = datasets()
         dataset = ds.getDatasets(taxon_id, accession_id)
@@ -59,6 +73,11 @@ class GetDatasets(Resource):
         )
 
 class GetResolutions(Resource):
+    """
+    Class to handle the http requests for retrieving the available resolutions
+    that have been loaded in a dataset
+    """
+    
     def get(self, taxon_id, accession_id, dataset):
         h5 = hdf5()
         chr_param = h5.get_resolutions(accession_id, dataset)
@@ -81,6 +100,11 @@ class GetResolutions(Resource):
         )
 
 class GetChromosomes(Resource):
+    """
+    Class to handle the http requests for retrieving the list of chromosomes for
+    a given accession
+    """
+    
     def get(self, taxon_id, accession_id, dataset, resolution):
         ds = datasets()
         chr_param = ds.getChromosomes(taxon_id, accession_id)
@@ -103,6 +127,12 @@ class GetChromosomes(Resource):
         )
 
 class GetChromosome(Resource):
+    """
+    Class to handle the http requests for retrieving chromosome information for
+    a given chromosome, include teh number of bins at a given resoltuoin and the
+    size of the chromosome
+    """
+    
     def get(self, taxon_id, accession_id, dataset, resolution, chr_id):
         ds = datasets()
         chr_param = ds.getChromosome(accession_id, resolution, chr_id)
@@ -123,6 +153,11 @@ class GetChromosome(Resource):
         )
 
 class GetInteractions(Resource):
+    """
+    Class to handle the http requests for retrieving ranges of interactions from
+    a given dataset
+    """
+    
     def get(self, taxon_id, accession_id, dataset, resolution, chr_id, start, end):
         limit_region = request.args.get('limit_region')
         limit_chr = request.args.get('limit_chr')
@@ -155,6 +190,11 @@ class GetInteractions(Resource):
         )
 
 class GetValue(Resource):
+    """
+    Class to handle the http requests for retrieving a single value from a given
+    dataset
+    """
+    
     def get(self, taxon_id, accession_id, dataset, resolution, bin_i, bin_j):
         h5 = hdf5()
         value = h5.get_value(dataset, resolution, bin_i, bin_j)
@@ -182,36 +222,36 @@ class GetValue(Resource):
             }
         )
 
-# /rest/v0.0/getInteractions
+"""
+Define the URIs and their matching methods
+"""
 #   List the available species for which there are datasets available
 api.add_resource(GetTaxons, "/rest/v0.0/getInteractions", endpoint='taxons')
 
-# /rest/v0.0/getInteractions
 #   List the available assemblies for a given species with links
 api.add_resource(GetAccessions, "/rest/v0.0/getInteractions/<string:taxon_id>", endpoint='accessions')
 
-# /rest/v0.0/getInteractions
 #   List the available datasets for a given genome with links
 api.add_resource(GetDatasets, "/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>", endpoint='datasets')
 
-# /rest/v0.0/getInteractions
 #   List the resolutions available with links
 api.add_resource(GetResolutions, "/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>", endpoint='resolutions')
 
-# /rest/v0.0/getInteractions
 #   List the Chromosomes and their sizes and number of bins for the given resolution with links
 api.add_resource(GetChromosomes, "/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>", endpoint='bins')
 
-# /rest/v0.0/getInteractions
 #   Show the size of the chromosome, the number of bins and a link to a minimal set
 api.add_resource(GetChromosome, "/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>", endpoint='sizes')
 
-# /rest/v0.0/getInteractions
+#   List the interactions for a given region
 api.add_resource(GetInteractions, "/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:start>/<int:end>", endpoint='values')
 
-# /rest/v0.0/getValue/<string:accession_id>/<string:dataset>/<string:chr_id>/<int:res_lvl>/<int:bin_id>
 #   Get a specific edge value for an interaction
 api.add_resource(GetValue, "/rest/v0.0/getValue/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:bin_i>/<int:bin_j>", endpoint="value")
 
+
+"""
+Initialise the server
+"""
 if __name__ == "__main__":
     app.run()

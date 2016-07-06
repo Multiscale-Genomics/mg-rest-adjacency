@@ -1,21 +1,32 @@
 import json
 import numpy as np
 
-"""
-Functions to handle the datasets JSON file and the calaulation of the bin cut
-off points. The reading of the HDF5 files should be left to the hdf5_reader.py
-functions.
-"""
-
 class datasets:
+    """
+    Class for handling all functions related to the interactions with the
+    datasets and returning information about those datasets.
+    """
     
     def __init__(self):
-        # Initialise the chr_param as an empty index when the service is started
+        """
+        Intialisation function for the datasets class
+        """
+        
+        # Load the datasets.json at the beginning
         self.datasets = json.loads(open('datasets.json').read())
+        
+        # Initialise the chr_param as an empty index when the service is started
         self.chr_param = {}
+        
+        # Load the chr_param based on the info in the datasets.json file
         self.load_datasets()
     
     def load_datasets(self):
+        """
+        Load the self.chr_param object with the required information about the
+        start and stop positions of the chromosomes and bins.
+        """
+        
         # Set the base bin sizes and initial offsets
         binSizes = [1000, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000]
         binCount = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -42,27 +53,46 @@ class datasets:
                 self.chr_param[accession_id]["meta"] = {"genomeSize": genomeLen}
     
     def getTaxon(self):
+        """
+        Return a list of taxon IDs
+        """
         return self.datasets["taxon_id"].keys()
     
     def getAccessions(self, taxon_id):
+        """
+        Return a list of accession IDs for a given taxon ID
+        """
         return self.datasets["taxon_id"][taxon_id]["accession"].keys()
     
     def getDatasets(self, taxon_id, accession_id):
+        """
+        Return a list of datasets for a given taxon and accession
+        """
         return self.datasets["taxon_id"][taxon_id]["accession"][accession_id]["datasets"]
     
     def getChromosomes(self, taxon_id, accession_id, resolution):
+        """
+        Return a list of chromosomes for a given taxon and accession
+        """
         return self.datasets["taxon_id"][taxon_id]["accession"][accession_id]["chromosomes"]
     
     def getChromosome(self, accession_id, resolution, chr_id):
+        """
+        Return a dict of chromosome properties for a given accession, resolution
+        and chromosome.
+        """
         return {
             "bins": self.chr_param[accession_id][chr_id]["bins"][resolution][0],
             "size": self.chr_param[accession_id][chr_id]["size"]
         }
     
-    """
-    Identify the chromosome based on either the x or y coordinate in the array.
-    """
+    
     def get_chromosome_from_array_index(self, accession_id, resolution, index):
+        """
+        Identify the chromosome based on either the x or y coordinate in the
+        array.
+        """
+        
         # Check that the genome indexes are loaded
         if self.chr_param.has_key(accession_id) == False:
             self.load_chromosome_sizes(accession_id)
@@ -76,7 +106,14 @@ class datasets:
                 return chr_id
     
     def getOffset(self, accession_id, resolution, chr_id):
+        """
+        Return an integer for the offset for a given chromosome at a given
+        resolution.
+        """
         return self.chr_param[accession_id][chr_id]["bins"][int(resolution)][1]
     
     def getBinCount(self, accession_id, resolution, chr_id):
+        """
+        Return a count of the number of bins for a given dataset and chromosome
+        """
         return self.chr_param[accession_id][chr_id]["bins"][int(resolution)][0]
