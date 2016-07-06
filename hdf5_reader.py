@@ -8,7 +8,7 @@ class hdf5:
     HDF5 files. All required information should be passed to this class.
     """
     
-    def get_resolutions(self, genome_id, dataset):
+    def get_resolutions(self, accession_id, dataset):
         """
         Return a list of the available resolutions in a given HDF5 file
         """
