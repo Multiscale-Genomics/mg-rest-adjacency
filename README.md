@@ -4,14 +4,15 @@ Microservice RESTful API for the querying of HDF5 files that have been generated
 
 # Requirements
 - Python 2.7+
+- virtualenv
+- pip
 - Python Modules
   - h5py
   - NumPy
   - Flask
   - Flask-Restful
   - json
-- virtualenv
-- pip
+  - pytest
 
 # Installation
 ## Initialise
@@ -137,4 +138,8 @@ will return the interactions where columns represent:
 wget http://<host>/rest/v0.0/getValue/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:bin_i>/<int:bin_j>
 ```
 
+# Testing
+Test scripts are located in the `test/` directory. Run `py.test` to from this directory to ensure that the API is working correctly.
+
+The scripts require a valid hdf5 file generated using the scripts from mg-storage-hdf5 and a matching datasets.json file located in the `rest/` directory
 
