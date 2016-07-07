@@ -3,4 +3,4 @@ import sys, os
 basedir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, basedir + '/../')
 
-from rest3 import app
+from rest import app
