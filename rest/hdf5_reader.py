@@ -1,3 +1,4 @@
+import pkg_resources, os
 import h5py
 import numpy as np
 import json
@@ -12,7 +13,9 @@ class hdf5:
         """
         Return a list of the available resolutions in a given HDF5 file
         """
-        f = h5py.File(dataset + '.hdf5', "r")
+        resource_package = __name__
+        resource_path = os.path.join(os.path.dirname(__file__), dataset + '.hdf5')
+        f = h5py.File(resource_path, "r")
         return {"accession_id": accession_id, "dataset": dataset, "resolutions": f.keys()}
     
     
@@ -30,7 +33,9 @@ class hdf5:
         xy_offset = ds.getOffset(accession_id, resolution, chr_id)
         
         # Open the hdf5 file
-        f = h5py.File(dataset + '.hdf5', "r")
+        resource_package = __name__
+        resource_path = os.path.join(os.path.dirname(__file__), dataset + '.hdf5')
+        f = h5py.File(resource_path, "r")
         dset = f[str(resolution)]
         if limit_chr != None:
             startB = ds.getOffset(accession_id, resolution, limit_chr)
@@ -45,31 +50,17 @@ class hdf5:
         results = []
         rShape = result.shape
         logText = []
-        for i in xrange(rShape[0]):
-            # Convert array location to region start position
-            x_start = i*int(resolution)
-            
-            for j in xrange(rShape[1]):
-                if result[i,j] > 0:
-                  # Convert array location to region start position
-                  y_start = j*int(resolution)
-                  
-                  # Identify the chromosome from the array location
-                  y_chr = ds.get_chromosome_from_array_index(accession_id, int(resolution), j)
-                  
-                  r = {"chrA": chr_id, "startA": x_start, "chrB": y_chr, "startB": y_start, "value": int(result[i,j]), '_links': {'self': value_url + "/" + str(accession_id) + "/" + str(dataset) + "/" + str(resolution) + "/" + str(i) + "/" + str(j)}}
-                  
-                  if limit_region != None:
-                      if limit_region.encode("utf-8") == "inter":
-                          if chr_id != y_chr:
-                              results.append(r)
-                      elif limit_region.encode("utf-8") == "intra":
-                          if chr_id == y_chr:
-                              results.append(r)
-                      else:
-                          results.append(r)
-                  else:
-                      results.append(r)
+        
+        r_index = np.transpose(np.nonzero(result))
+        logText.append({"coord": {"x0": (x+xy_offset), "x1": (y+xy_offset)}, "r_index": len(r_index), "param": {"start": start, "x": x, "end": end, "y": y, "xy_offset": xy_offset, "resolution": resolution, "accession": accession_id, "chr_id": chr_id, 'chr_param': ds.getChr_param()}})
+        
+        for i in r_index:
+            x_start = (i[0]+x+xy_offset)*10000
+            y_chr = ds.get_chromosome_from_array_index(accession_id, int(resolution), i[1])
+            chrB = ds.getChromosome(accession_id, int(resolution), y_chr)
+            y_start = (i[1]*int(resolution))-(chrB["size"][1]-chrB["size"][0])
+            r = {"chrA": chr_id, "startA": x_start, "chrB": y_chr, "startB": y_start, "value": int(result[i[0],i[1]]), '_links': {'self': value_url + "/" + str(accession_id) + "/" + str(dataset) + "/" + str(resolution) + "/" + str(i[0]+x+xy_offset) + "/" + str(i[1])}}
+            results.append(r)
         
         return {"log": logText, "results": results}
     
@@ -77,7 +68,9 @@ class hdf5:
         """
         Get a specific value for a given dataset, resoltuoin
         """
-        f = h5py.File(dataset + '.hdf5', "r")
+        resource_package = __name__
+        resource_path = os.path.join(os.path.dirname(__file__), dataset + '.hdf5')
+        f = h5py.File(resource_path, "r")
         dset = f[str(resolution)]
         value = dset[int(bin_i), int(bin_j)]
         f.close()

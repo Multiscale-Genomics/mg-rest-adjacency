@@ -1,3 +1,4 @@
+import pkg_resources, os
 import json
 import numpy as np
 
@@ -13,7 +14,10 @@ class datasets:
         """
         
         # Load the datasets.json at the beginning
-        self.datasets = json.loads(open('datasets.json').read())
+        resource_package = __name__
+        resource_path = os.path.join('datasets.json')
+        dataset_file = pkg_resources.resource_string(resource_package, resource_path)
+        self.datasets = json.loads(dataset_file)
         
         # Initialise the chr_param as an empty index when the service is started
         self.chr_param = {}
@@ -29,11 +33,11 @@ class datasets:
         
         # Set the base bin sizes and initial offsets
         binSizes = [1000, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000]
-        binCount = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         
         for taxon_id in self.datasets["taxon_id"]:
             for accession_id in self.datasets["taxon_id"][taxon_id]["accession"]:
                 genomeLen = 0
+                binCount = [0, 0, 0, 0, 0, 0, 0, 0, 0]
                 for i in xrange(len(self.datasets["taxon_id"][taxon_id]["accession"][accession_id]["chromosomes"])):
                     c = self.datasets["taxon_id"][taxon_id]["accession"][accession_id]["chromosomes"][i]
                     
@@ -42,7 +46,7 @@ class datasets:
                     # Calculate the number of bins for a chromosome and then join with
                     # the offset values for the start in the array
                     binS = [int(np.ceil(c[1]/float(y))) for y in binSizes]
-                    binC = dict(zip(binSizes, [[binS[j], binCount[j]] for j in range(len(binCount))]))
+                    binC = dict(zip(binSizes, [[binS[j], binCount[j], binS[j]+binCount[j]] for j in range(len(binCount))]))
                     if self.chr_param.has_key(accession_id):
                         self.chr_param[accession_id][c[0]] = {'size': [c[1], genomeLen], 'bins': binC}
                     else:
@@ -92,17 +96,12 @@ class datasets:
         Identify the chromosome based on either the x or y coordinate in the
         array.
         """
-        
-        # Check that the genome indexes are loaded
-        if self.chr_param.has_key(accession_id) == False:
-            self.load_chromosome_sizes(accession_id)
-        
-        for chr_id in self.chr_param[accession_id]:
+        for chr_id in self.chr_param[accession_id].keys():
             if chr_id == "meta":
                 continue
-            chr_end = self.chr_param[accession_id][chr_id]["bins"][int(resolution)][1] + self.chr_param[accession_id][chr_id]["bins"][int(resolution)][0]
+            chr_end = self.chr_param[accession_id][chr_id]["bins"][int(resolution)][2]
             chr_start = self.chr_param[accession_id][chr_id]["bins"][int(resolution)][1]
-            if index > chr_start and index < chr_end:
+            if index >= chr_start and index <= chr_end:
                 return chr_id
     
     def getOffset(self, accession_id, resolution, chr_id):
@@ -117,3 +116,6 @@ class datasets:
         Return a count of the number of bins for a given dataset and chromosome
         """
         return self.chr_param[accession_id][chr_id]["bins"][int(resolution)][0]
+    
+    def getChr_param(self):
+        return self.chr_param

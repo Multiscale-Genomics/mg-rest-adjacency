@@ -17,8 +17,17 @@ def output_tsv(data, code, headers=None):
         for v in data["values"]:
             outstr += str(v["chrA"]) + "\t" + str(v["startA"]) + "\t" + str(v["chrB"]) + "\t" + str(v["startB"]) + "\t" + str(v["value"]) + "\n"
         resp = make_response(outstr, code)
-    resp.headers.extend(headers or {})
-    return resp
+        resp.headers.extend(headers or {})
+        return resp
+
+class GetChrParam(Resource):
+    """
+    Class to handle the http requests for retrieving a list of taxon IDs
+    """
+    
+    def get(self):
+        ds = datasets()
+        return ds.getChr_param()
 
 class GetTaxons(Resource):
     """
@@ -111,7 +120,7 @@ class GetChromosomes(Resource):
     
     def get(self, taxon_id, accession_id, dataset, resolution):
         ds = datasets()
-        chr_param = ds.getChromosomes(taxon_id, accession_id)
+        chr_param = ds.getChromosomes(taxon_id, accession_id, resolution)
         request_path = request.path
         rp = request_path.split("/")
         children = []
@@ -188,7 +197,8 @@ class GetInteractions(Resource):
             #'page_id': 
             #'pages': 
             #'page_size': 
-            'values': x["results"]
+            'values': x["results"],
+            'log': x["log"]
         }
 
 class GetValue(Resource):
@@ -248,6 +258,9 @@ api.add_resource(GetInteractions, "/rest/v0.0/getInteractions/<string:taxon_id>/
 
 #   Get a specific edge value for an interaction
 api.add_resource(GetValue, "/rest/v0.0/getValue/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:bin_i>/<int:bin_j>", endpoint="value")
+
+#   List the interactions for a given region
+api.add_resource(GetChrParam, "/rest/v0.0/getChrParam", endpoint='chr_param')
 
 
 """
