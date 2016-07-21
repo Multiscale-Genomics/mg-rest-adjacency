@@ -19,7 +19,7 @@ class hdf5:
         return {"accession_id": accession_id, "dataset": dataset, "resolutions": f.keys()}
     
     
-    def get_range(self, ds, dataset, resolution, accession_id, chr_id, start, end, limit_region, limit_chr, value_url = '/rest/v0.0/getValue/9606'):
+    def get_range(self, ds, dataset, resolution, accession_id, chr_id, start, end, limit_region=None, limit_chr=None, value_url = '/rest/v0.0/getValue/9606'):
         """
         Get the interactions that happen within a defined region on a specific
         chromosome. Returns inter and intra interactions with the defined region.
@@ -52,13 +52,13 @@ class hdf5:
         logText = []
         
         r_index = np.transpose(np.nonzero(result))
-        logText.append({"coord": {"x0": (x+xy_offset), "x1": (y+xy_offset)}, "r_index": len(r_index), "param": {"start": start, "x": x, "end": end, "y": y, "xy_offset": xy_offset, "resolution": resolution, "accession": accession_id, "chr_id": chr_id, 'chr_param': ds.getChr_param()}})
+        logText.append({"coord": {"x0": (x+xy_offset), "x1": (y+xy_offset)}, "r_index": len(r_index), "param": {"start": start, "x": x, "end": end, "y": y, "xy_offset": xy_offset, "resolution": resolution, "accession": accession_id, "chr_id": chr_id}, 'chr_param': ds.getChr_param()})
         
         for i in r_index:
-            x_start = (i[0]+x+xy_offset)*10000
+            x_start = ((i[0]+x)*int(resolution))
             y_chr = ds.get_chromosome_from_array_index(accession_id, int(resolution), i[1])
             chrB = ds.getChromosome(accession_id, int(resolution), y_chr)
-            y_start = (i[1]*int(resolution))-(chrB["size"][1]-chrB["size"][0])
+            y_start = (i[1]-chrB["bin_offset"])*int(resolution)
             r = {"chrA": chr_id, "startA": x_start, "chrB": y_chr, "startB": y_start, "value": int(result[i[0],i[1]]), '_links': {'self': value_url + "/" + str(accession_id) + "/" + str(dataset) + "/" + str(resolution) + "/" + str(i[0]+x+xy_offset) + "/" + str(i[1])}}
             results.append(r)
         

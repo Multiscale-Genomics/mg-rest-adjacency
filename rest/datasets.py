@@ -54,7 +54,8 @@ class datasets:
                     
                     # Calculate the new offset values.
                     binCount = [binCount[i]+binS[i] for i in range(len(binCount))]
-                self.chr_param[accession_id]["meta"] = {"genomeSize": genomeLen}
+                totalBinCount = dict(zip(binSizes, [[binS[i], binCount[i]]for i in range(len(binCount))]))
+                self.chr_param[accession_id]["meta"] = {"genomeSize": genomeLen, "totalBinCount": totalBinCount}
     
     def getTaxon(self):
         """
@@ -87,6 +88,7 @@ class datasets:
         """
         return {
             "bins": self.chr_param[accession_id][chr_id]["bins"][resolution][0],
+            "bin_offset": self.chr_param[accession_id][chr_id]["bins"][resolution][1],
             "size": self.chr_param[accession_id][chr_id]["size"]
         }
     
