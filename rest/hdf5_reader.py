@@ -57,8 +57,7 @@ class hdf5:
         for i in r_index:
             x_start = ((i[0]+x)*int(resolution))
             y_chr = ds.get_chromosome_from_array_index(accession_id, int(resolution), i[1])
-            chrB = ds.getChromosome(accession_id, int(resolution), y_chr)
-            y_start = (i[1]-chrB["bin_offset"])*int(resolution)
+            y_start = (i[1]-ds.getOffset(accession_id, resolution, y_chr))*int(resolution)
             r = {"chrA": chr_id, "startA": x_start, "chrB": y_chr, "startB": y_start, "value": int(result[i[0],i[1]]), '_links': {'self': value_url + "/" + str(accession_id) + "/" + str(dataset) + "/" + str(resolution) + "/" + str(i[0]+x+xy_offset) + "/" + str(i[1])}}
             results.append(r)
         
