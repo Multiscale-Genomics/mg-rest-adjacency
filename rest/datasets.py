@@ -54,6 +54,7 @@ class datasets:
                     
                     # Calculate the new offset values.
                     binCount = [binCount[i]+binS[i] for i in range(len(binCount))]
+                
                 totalBinCount = dict(zip(binSizes, [[binS[i], binCount[i]]for i in range(len(binCount))]))
                 self.chr_param[accession_id]["meta"] = {"genomeSize": genomeLen, "totalBinCount": totalBinCount}
     
@@ -118,6 +119,12 @@ class datasets:
         Return a count of the number of bins for a given dataset and chromosome
         """
         return self.chr_param[accession_id][chr_id]["bins"][int(resolution)][0]
+    
+    def getTotalBinCount(self, accession_id, resolution):
+        """
+        Return a count of the total number of bins for a given dataset and resolution
+        """
+        return self.chr_param[accession_id]["meta"]["totalBinCount"][int(resolution)][1]
     
     def getChr_param(self):
         return self.chr_param
