@@ -1,6 +1,6 @@
 # mg-rest-adjacency
 
-Microservice RESTful API for the querying of Adjacency data stored in HDF5 files that have been generated using the code from the mg-process-fastq scripts
+Microservice RESTful API for the querying of Adjacency data stored in HDF5 files that have been generated using the code from the mg-storage-hdf5 / mg-process-fastq scripts
 
 # Requirements
 - Python 2.7+
