@@ -248,6 +248,23 @@ class GetValue(Resource):
             'value': int(value)
         }
 
+class ping(Resource):
+    """
+    Class to handle the http requests to ping a service
+    """
+    
+    def get(self):
+        import release
+        res = {
+            "status":  "ready",
+            "version": release.__version__,
+            "author":  release.__author__,
+            "license": release.__license__,
+            "name":    release.__rest_name__,
+            "description": release.__description__
+        }
+        return res
+
 """
 Define the URIs and their matching methods
 """
@@ -277,6 +294,9 @@ api.add_resource(GetValue, "/rest/v0.0/getValue/<string:taxon_id>/<string:access
 
 #   List the interactions for a given region
 api.add_resource(GetChrParam, "/rest/v0.0/getChrParam", endpoint='chr_param')
+
+#   List the interactions for a given region
+api.add_resource(ping, "/rest/adjacency-ping", endpoint='adjacency-ping')
 
 
 """
