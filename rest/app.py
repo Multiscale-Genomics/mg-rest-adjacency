@@ -74,7 +74,6 @@ class GetDetails(Resource):
         return {
             '_links': {
                 'self': request.base_url,
-                'child': request.base_url + "/0/" + str(resolution),
                 'parent': request.url_root + 'adjacency'
             },
             'chromosomes': x["chromosomes"],
@@ -116,9 +115,8 @@ class GetInteractions(Resource):
         
         request_path = request.path
         rp = request_path.split("/")
-        value_url = request.url_root + 'rest/' + str(rp[2]) + '/getValue/' + str(taxon_id)
+        value_url = request.url_root + 'api/adjacency/getValue'
         
-        #ds = datasets()
         h5 = hdf5()
         x = h5.get_range(user_id, file_id, resolution, accession_id, chr_id, start, end, limit_region, limit_chr, value_url)
         #app.logger.warn(x["log"])
@@ -126,7 +124,7 @@ class GetInteractions(Resource):
         return {
             '_links': {
                 'self': request.url,
-                'parent': request.url_root + '/rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset) + '/' + str(resolution) + "/" + str(chr_id)
+                'parent': request.url_root + '/api/adjacency'
             },
             'dataset': dataset,
             'resolution': resolution,
@@ -150,7 +148,7 @@ class GetValue(Resource):
     dataset
     """
     
-    def get(self, taxon_id, accession_id, dataset, resolution, bin_i, bin_j):
+    def get(self, user_id, file_id, resolution, bin_i, bin_j):
         h5 = hdf5()
         meta_data = h5.get_details(user_id, file_id)
         value = h5.get_value(user_id, file_id, resolution, bin_i, bin_j)
@@ -163,7 +161,7 @@ class GetValue(Resource):
         
         return {
             '_links': {
-              'self': request.url_root + 'rest/' + str(rp[2]) + '/getValue/' + str(taxon_id) + "/" + str(accession_id) + "/" + str(dataset) + "/" + str(resolution) + "/" + str(bin_i) + "/" + str(bin_j)
+              'self': request.url_root + 'api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(bin_i) + "&pos_y=" + str(bin_j)
             },
             'genome': accession_id,
             'chrA': chrA_id,

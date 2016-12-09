@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import pkg_resources, os
-import h5py
+import pkg_resources, os, json, h5py
 import numpy as np
-import json
+
+from dmp import dmp
 
 class hdf5:
     """
