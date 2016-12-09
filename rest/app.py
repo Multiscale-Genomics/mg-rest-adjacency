@@ -118,7 +118,7 @@ class GetInteractions(Resource):
         value_url = request.url_root + 'api/adjacency/getValue'
         
         h5 = hdf5()
-        x = h5.get_range(user_id, file_id, resolution, accession_id, chr_id, start, end, limit_region, limit_chr, value_url)
+        x = h5.get_range(user_id, file_id, resolution, chr_id, start, end, limit_region, limit_chr, value_url)
         #app.logger.warn(x["log"])
         
         return {

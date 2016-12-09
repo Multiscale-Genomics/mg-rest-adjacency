@@ -41,7 +41,7 @@ class hdf5:
             "resolutions" : resolutions}
     
     
-    def get_range(self, user_id, file_id, resolution, accession_id, chr_id, start, end, limit_region=None, limit_chr=None, value_url = '/rest/v0.0/getValue/9606'):
+    def get_range(self, user_id, file_id, resolution, chr_id, start, end, limit_region=None, limit_chr=None, value_url = '/rest/v0.0/getValue/9606'):
         """
         Get the interactions that happen within a defined region on a specific
         chromosome. Returns inter and intra interactions with the defined region.
@@ -81,7 +81,7 @@ class hdf5:
         logText = []
         
         r_index = np.transpose(np.nonzero(result))
-        logText.append({"coord": {"x0": (x+xy_offset), "x1": (y+xy_offset)}, "r_index": len(r_index), "param": {"start": start, "x": x, "end": end, "y": y, "xy_offset": xy_offset, "resolution": resolution, "chr_id": chr_id}, 'chr_param': chr_param()})
+        logText.append({"coord": {"x0": (x+xy_offset), "x1": (y+xy_offset)}, "r_index": len(r_index), "param": {"start": start, "x": x, "end": end, "y": y, "xy_offset": xy_offset, "resolution": resolution, "chr_id": chr_id}, 'chr_param': chr_param})
         
         for i in r_index:
             x_start = ((i[0]+x)*int(resolution))
