@@ -85,7 +85,7 @@ class hdf5:
         
         for i in r_index:
             x_start = ((i[0]+x)*int(resolution))
-            y_chr = self._get_chromosome_from_array_index(accession_id, int(resolution), i[1])
+            y_chr = self.get_chromosome_from_array_index(accession_id, int(resolution), i[1])
             y_start = (i[1]-chr_param[y_chr]["bins"][resolution][1])*int(resolution)
             r = {"chrA": chr_id, "startA": x_start, "chrB": y_chr, "startB": y_start, "value": int(result[i[0],i[1]]), '_links': {'self': value_url + "/getInteractions?user_id=" + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(i[0]+x+xy_offset) + "&pos_y=" + str(i[1])}}
             results.append(r)
@@ -138,7 +138,7 @@ class hdf5:
         return chr_param
     
     
-    def _get_chromosome_from_array_index(self, chr_param, resolution, index):
+    def get_chromosome_from_array_index(self, chr_param, resolution, index):
         """
         Identify the chromosome based on either the x or y coordinate in the
         array.
