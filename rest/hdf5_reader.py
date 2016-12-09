@@ -32,7 +32,7 @@ class hdf5:
         da = dmp.dmp()
         file_obj = da.get_file_by_id(user_id, file_id)
         f = h5py.File(file_obj["file_path"], "r")
-        resolutions = [i for i in f.keys if (isinstance(i, int)) and not isinstance(i, bool)]
+        resolutions = f.keys()
         dset = f[str(resolutions[0])]
         chr_param = _calculate_chr_param(resolutions, dset.attrs["chromosomes"])
         return {
