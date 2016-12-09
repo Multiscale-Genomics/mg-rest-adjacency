@@ -32,11 +32,11 @@ class hdf5:
         da = dmp.dmp()
         file_obj = da.get_file_by_id(user_id, file_id)
         f = h5py.File(file_obj["file_path"], "r")
-        meta_data = f["meta_data"]
         resolutions = [i for i in f.keys if (isinstance(i, int)) and not isinstance(i, bool)]
-        chr_param = _calculate_chr_param(resolutions, meta_data["chromosomes"])
+        dset = f[str(resolutions[0])]
+        chr_param = _calculate_chr_param(resolutions, dset.attrs["chromosomes"])
         return {
-            "chromosomes" : meta_data["chromosomes"],
+            "chromosomes" : dset.attrs["chromosomes"],
             "chr_param"   : chr_param,
             "resolutions" : resolutions}
     
@@ -53,13 +53,19 @@ class hdf5:
         
         # Open the hdf5 file
         da = dmp.dmp()
-        file_obj = da.get_file_by_id(user_id, file_id)
-        f = h5py.File(file_obj["file_path"], "r")
+        
+        if user_id == 'test':
+            resource_package = __name__
+            resource_path = os.path.join(os.path.dirname(__file__), 'rao2014.hdf5')
+            f = h5py.File(resource_path, "r")
+        else:
+            file_obj = da.get_file_by_id(user_id, file_id)
+            f = h5py.File(file_obj["file_path"], "r")
         
         # Get meta data from HDF5 file
-        meta_data = f["meta_data"]
         resolutions = [i for i in f.keys if (isinstance(i, int)) and not isinstance(i, bool)]
-        chr_param = _calculate_chr_param(resolutions, meta_data["chromosomes"])
+        dset = f[str(resolutions[0])]
+        chr_param = _calculate_chr_param(resolutions, dset.attrs["chromosomes"])
         
         # xy_offset for the chromosome in the super array
         xy_offset = chr_param[chr_id]["bins"][resolution][1]
