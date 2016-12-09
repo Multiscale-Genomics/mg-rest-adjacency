@@ -37,128 +37,11 @@ def output_tsv(data, code, headers=None):
         resp.headers.extend(headers or {})
         return resp
 
-class GetChrParam(Resource):
-    """
-    Class to handle the http requests for retrieving a list of taxon IDs
-    """
-    
-    def get(self):
-        ds = datasets()
-        return ds.getChr_param()
 
-class GetTaxons(Resource):
+class GetDetails(Resource):
     """
-    Class to handle the http requests for retrieving a list of taxon IDs
-    """
-    
-    def get(self):
-        ds = datasets()
-        taxons = ds.getTaxon()
-        request_path = request.path
-        rp = request_path.split("/")
-        return {
-            '_links': {
-                'self': request.base_url,
-                'child': [request.base_url + "/" + str(d) for d in taxons]
-            },
-            'taxons': taxons
-        }
-
-class GetAccessions(Resource):
-    """
-    Class to handle the http requests for retrieving a list of accessions for a 
-    given taxonic ID
-    """
-    
-    def get(self, taxon_id):
-        ds = datasets()
-        accessions = ds.getAccessions(taxon_id)
-        request_path = request.path
-        rp = request_path.split("/")
-        return {
-            '_links': {
-                'self': request.base_url,
-                'child': [request.base_url + "/" + str(d) for d in accessions],
-                'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id)
-            },
-            'accessions': accessions
-        }
-
-class GetDatasets(Resource):
-    """
-    Class to handle the http requests for retrieving a list of datasets for a
-    given accession
-    """
-    
-    def get(self, taxon_id, accession_id):
-        ds = datasets()
-        dataset = ds.getDatasets(taxon_id, accession_id)
-        request_path = request.path
-        rp = request_path.split("/")
-        return {
-            '_links': {
-                'self': request.base_url,
-                'child': [request.base_url + "/" + str(d) for d in dataset],
-                'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id)
-            },
-            'datasets': dataset
-        }
-
-class GetResolutions(Resource):
-    """
-    Class to handle the http requests for retrieving the available resolutions
-    that have been loaded in a dataset
-    """
-    
-    def get(self, taxon_id, accession_id, dataset):
-        h5 = hdf5()
-        chr_param = h5.get_resolutions(accession_id, dataset)
-        request_path = request.path
-        rp = request_path.split("/")
-        children = []
-        for c in chr_param["resolutions"]:
-            children.append(request.base_url + "/" + c)
-        return {
-            '_links': {
-                'self': request.base_url,
-                'child': children,
-                'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset)
-            },
-            'dataset': dataset,
-            'accession_id': accession_id,
-            'resolutions': chr_param['resolutions'],
-        }
-
-class GetChromosomes(Resource):
-    """
-    Class to handle the http requests for retrieving the list of chromosomes for
-    a given accession
-    """
-    
-    def get(self, taxon_id, accession_id, dataset, resolution):
-        ds = datasets()
-        chr_param = ds.getChromosomes(taxon_id, accession_id, resolution)
-        request_path = request.path
-        rp = request_path.split("/")
-        children = []
-        chromosomes = []
-        for c in chr_param:
-          children.append(request.base_url + "/" + c[0])
-          chromosomes.append(c[0])
-        return {
-            '_links': {
-                'self': request.base_url,
-                'child': children,
-                'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset) + '/' + str(resolution)
-            },
-            'chromosomes': chromosomes
-        }
-
-class GetChromosome(Resource):
-    """
-    Class to handle the http requests for retrieving chromosome information for
-    a given chromosome, include teh number of bins at a given resoltuoin and the
-    size of the chromosome
+    Class to handle the http requests for the size of the chromosome, the
+    number of bins and available resolutions
     """
     
     def get(self, taxon_id, accession_id, dataset, resolution, chr_id):
@@ -167,13 +50,18 @@ class GetChromosome(Resource):
         
         request_path = request.path
         rp = request_path.split("/")
+        
+        h5 = hdf5()
+        x = h5.get_details(user_id, file_id)
+        chr_param = x["chr_param"]
+        
         return {
             '_links': {
                 'self': request.base_url,
                 'child': request.base_url + "/0/" + str(resolution),
                 'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset) + '/' + str(resolution) + "/" + str(chr_id)
             },
-            'chromosome': chr_id,
+            'chromosomes': x["chromosomes"],
             "bins": chr_param["bins"],
             "size": chr_param["size"]
         }
@@ -248,11 +136,11 @@ class GetValue(Resource):
     
     def get(self, taxon_id, accession_id, dataset, resolution, bin_i, bin_j):
         h5 = hdf5()
-        value = h5.get_value(dataset, resolution, bin_i, bin_j)
+        meta_data = h5.get_details(user_id, file_id)
+        value = h5.get_value(user_id, file_id, resolution, bin_i, bin_j)
         
-        ds = datasets()
-        chrA_id = ds.get_chromosome_from_array_index(accession_id, resolution, bin_i)
-        chrB_id = ds.get_chromosome_from_array_index(accession_id, resolution, bin_j)
+        chrA_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, bin_i)
+        chrB_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, bin_j)
         
         request_path = request.path
         rp = request_path.split("/")
