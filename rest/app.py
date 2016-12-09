@@ -38,16 +38,31 @@ def output_tsv(data, code, headers=None):
         return resp
 
 
+class GetEndPoints(Resource):
+    """
+    Class to handle the http requests for returning information about the end
+    points
+    """
+    
+    def get(self):
+        return {
+            '_links': {
+                '_self': request.base_url,
+                '_getDetails': request.url_root + 'adjacency/getDetails',
+                '_getInteractions': request.url_root + 'adjacency/getInteractions',
+                '_getValue': request.url_root + 'adjacency/getValues',
+                '_parent': request.url_root
+            }
+        }
+
+
 class GetDetails(Resource):
     """
     Class to handle the http requests for the size of the chromosome, the
     number of bins and available resolutions
     """
     
-    def get(self, taxon_id, accession_id, dataset, resolution, chr_id):
-        ds = datasets()
-        chr_param = ds.getChromosome(accession_id, resolution, chr_id)
-        
+    def get(self, user_id, file_id, resolution, chr_id):
         request_path = request.path
         rp = request_path.split("/")
         
@@ -59,7 +74,7 @@ class GetDetails(Resource):
             '_links': {
                 'self': request.base_url,
                 'child': request.base_url + "/0/" + str(resolution),
-                'parent': request.url_root + 'rest/' + str(rp[2]) + '/' + str(rp[3]) + '/' + str(taxon_id) + '/' + str(accession_id) + '/' + str(dataset) + '/' + str(resolution) + "/" + str(chr_id)
+                'parent': request.url_root + 'adjacency'
             },
             'chromosomes': x["chromosomes"],
             "bins": chr_param["bins"],
