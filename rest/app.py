@@ -216,7 +216,7 @@ class GetInteractions(Resource):
         
         #ds = datasets()
         h5 = hdf5()
-        x = h5.get_range(ds, user_id, file_id, resolution, accession_id, chr_id, start, end, limit_region, limit_chr, value_url)
+        x = h5.get_range(user_id, file_id, resolution, accession_id, chr_id, start, end, limit_region, limit_chr, value_url)
         #app.logger.warn(x["log"])
         
         return {
@@ -292,29 +292,15 @@ class ping(Resource):
 """
 Define the URIs and their matching methods
 """
-#   List the available species for which there are datasets available
-#api.add_resource(GetTaxons, "/api/getInteractions", endpoint='taxons')
-api.add_resource(GetInteractions, "/api/getInteractions/species", endpoint='species')
+#   List the available end points for this service
+api.add_resource(GetEndPoints, "/api/adjacency", endpoint='adjacency_root')
 
-#   List the available assemblies for a given species with links
-#api.add_resource(GetAccessions, "/api/getInteractions/<string:taxon_id>", endpoint='accessions')
+#   Show the size of the chromosome, the number of bins and available resolutions
+#   Parameters:
+#    - file_id - (string)
+#    - user_id - (string)
+api.add_resource(GetDetails, "/api/adjacency/details", endpoint='meta_data')
 
-#   List the available datasets for a given genome with links
-#api.add_resource(GetDatasets, "/api/getInteractions/<string:taxon_id>/<string:accession_id>", endpoint='datasets')
-api.add_resource(GetInteractions, "/api/getInteractions/datasets", endpoint='datasets')
-
-#   List the resolutions available with links
-#api.add_resource(GetResolutions, "/api/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>", endpoint='resolutions')
-
-#   List the Chromosomes and their sizes and number of bins for the given resolution with links
-#api.add_resource(GetChromosomes, "/api/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>", endpoint='bins')
-
-#   Show the size of the chromosome, the number of bins and a link to a minimal set
-#api.add_resource(GetChromosome, "/api/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>", endpoint='sizes')
-api.add_resource(GetInteractions, "/api/getInteractions/details", endpoint='meta_data')
-
-#   List the interactions for a given region
-#api.add_resource(GetInteractions, "/api/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:start>/<int:end>", endpoint='values')
 #   List the interactions for a given region
 #   Parameters:
 #    - chr     - chromosome (string)
@@ -322,16 +308,20 @@ api.add_resource(GetInteractions, "/api/getInteractions/details", endpoint='meta
 #    - start   - (int)
 #    - end     - (int)
 #    - file_id - (string)
+#    - user_id - (string)
 #   Parameters (optional):
 #    - limit_region - 
 #    - limit_chr    - Chromosome (string)
-api.add_resource(GetInteractions, "/api/getInteractions/region", endpoint='values')
+api.add_resource(GetInteractions, "/api/adjacency/getInteractions", endpoint='values')
 
 #   Get a specific edge value for an interaction
-#api.add_resource(GetValue, "/api/getValue/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:bin_i>/<int:bin_j>", endpoint="value")
-
-#   List the interactions for a given region
-#api.add_resource(GetChrParam, "/api/getChrParam", endpoint='chr_param')
+#   Parameters:
+#    - res     - resolution (int)
+#    - pos_x   - (int)
+#    - pox_y   - (int)
+#    - file_id - (string)
+#    - user_id - (string)
+api.add_resource(GetValue, "/api/adjacency/getValue", endpoint="value")
 
 #   Service ping
 api.add_resource(ping, "/api/adjacency/ping", endpoint='adjacency-ping')
