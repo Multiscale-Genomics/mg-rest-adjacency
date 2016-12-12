@@ -52,7 +52,7 @@ class GetEndPoints(Resource):
                 '_getInteractions': request.url_root + 'api/adjacency/getInteractions',
                 '_getValue': request.url_root + 'api/adjacency/getValues',
                 '_ping': request.url_root + 'api/adjacency/ping',
-                '_parent': request.url_root
+                '_parent': request.url_root + 'api'
             }
         }
 
