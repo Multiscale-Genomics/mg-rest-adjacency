@@ -63,7 +63,7 @@ class hdf5:
             f = h5py.File(file_obj["file_path"], "r")
         
         # Get meta data from HDF5 file
-        resolutions = f.keys()
+        resolutions = map(int, f.keys())
         dset = f[str(resolutions[0])]
         chr_param = self._calculate_chr_param(resolutions, dset.attrs["chromosomes"])
         
@@ -91,7 +91,7 @@ class hdf5:
         
         for i in r_index:
             x_start = ((i[0]+x)*int(resolution))
-            y_chr = self.get_chromosome_from_array_index(accession_id, int(resolution), i[1])
+            y_chr = self.get_chromosome_from_array_index(chr_param, int(resolution), i[1])
             y_start = (i[1]-chr_param[y_chr]["bins"][resolution][1])*int(resolution)
             r = {"chrA": chr_id, "startA": x_start, "chrB": y_chr, "startB": y_start, "value": int(result[i[0],i[1]]), '_links': {'self': value_url + "/getInteractions?user_id=" + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(i[0]+x+xy_offset) + "&pos_y=" + str(i[1])}}
             results.append(r)
@@ -130,7 +130,7 @@ class hdf5:
     
             # Calculate the number of bins for a chromosome and then join with
             # the offset values for the start in the array
-            binS = [int(np.ceil(c[1]/float(y))) for y in binSizes]
+            binS = [int(np.ceil(int(c[1])/float(y))) for y in binSizes]
             binC = dict(zip(binSizes, [[binS[j], binCount[j], binS[j]+binCount[j]] for j in range(len(binCount))]))
             
             chr_param[str(c[0])] = {'size': [int(c[1]), genomeLen], 'bins': binC}
