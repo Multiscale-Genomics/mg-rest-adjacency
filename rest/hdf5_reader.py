@@ -63,9 +63,9 @@ class hdf5:
             f = h5py.File(file_obj["file_path"], "r")
         
         # Get meta data from HDF5 file
-        resolutions = [i for i in f.keys if (isinstance(i, int)) and not isinstance(i, bool)]
+        resolutions = f.keys()
         dset = f[str(resolutions[0])]
-        chr_param = _calculate_chr_param(resolutions, dset.attrs["chromosomes"])
+        chr_param = self._calculate_chr_param(resolutions, dset.attrs["chromosomes"])
         
         # xy_offset for the chromosome in the super array
         xy_offset = chr_param[chr_id]["bins"][resolution][1]
@@ -126,14 +126,14 @@ class hdf5:
         for i in xrange(len(chromosomes)):
             c = chromosomes[i]
             
-            genomeLen += c[1]
+            genomeLen += int(c[1])
     
             # Calculate the number of bins for a chromosome and then join with
             # the offset values for the start in the array
             binS = [int(np.ceil(c[1]/float(y))) for y in binSizes]
             binC = dict(zip(binSizes, [[binS[j], binCount[j], binS[j]+binCount[j]] for j in range(len(binCount))]))
             
-            chr_param[c[0]] = {'size': [c[1], genomeLen], 'bins': binC}
+            chr_param[str(c[0])] = {'size': [int(c[1]), genomeLen], 'bins': binC}
             
             # Calculate the new offset values.
             binCount = [binCount[i]+binS[i] for i in range(len(binCount))]
