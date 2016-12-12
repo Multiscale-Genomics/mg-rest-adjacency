@@ -97,11 +97,6 @@ class GetInteractions(Resource):
         limit_region = request.args.get('limit_region')
         limit_chr = request.args.get('limit_chr')
         
-        if chr_id not in chromosomes:
-            return {
-                "error" : "No chr parameter provided"
-            }
-        
         if resolution == None:
             return {
                 "error" : "No res parameter provided"
@@ -126,18 +121,13 @@ class GetInteractions(Resource):
                 'self': request.url,
                 'parent': request.url_root + '/api/adjacency'
             },
-            'dataset': dataset,
             'resolution': resolution,
-            'genome': accession_id,
             'chr_id': chr_id,
             'start': start,
             'end': end,
             'limit_region': limit_region,
             'limit_chr': limit_chr,
             'interaction_count': len(x["results"]),
-            #'page_id': 
-            #'pages': 
-            #'page_size': 
             'values': x["results"],
             'log': x["log"]
         }
