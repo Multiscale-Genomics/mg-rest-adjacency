@@ -138,7 +138,13 @@ class GetValue(Resource):
     dataset
     """
     
-    def get(self, user_id, file_id, resolution, bin_i, bin_j):
+    def get(self):
+        user_id = request.args.get('user_id')
+        file_id = request.args.get('file_id')
+        resolution = int(request.args.get('res'))
+        bin_i = int(request.args.get('pos_x'))
+        bin_j = int(request.args.get('pos_y'))
+        
         h5 = hdf5()
         meta_data = h5.get_details(user_id, file_id)
         value = h5.get_value(user_id, file_id, resolution, bin_i, bin_j)
