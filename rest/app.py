@@ -17,8 +17,6 @@ limitations under the License.
 from flask import Flask, make_response, request
 from flask_restful import Api, Resource
 
-#from datasets import datasets
-from dmp import dmp
 from hdf5_reader import hdf5
 
 app = Flask(__name__)

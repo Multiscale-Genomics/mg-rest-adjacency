@@ -29,7 +29,7 @@ class hdf5:
         """
         Return a list of the available resolutions in a given HDF5 file
         """
-        da = dmp.dmp()
+        da = dmp()
         file_obj = da.get_file_by_id(user_id, file_id)
         f = h5py.File(file_obj["file_path"], "r")
         resolutions = f.keys()
@@ -52,7 +52,7 @@ class hdf5:
         y = int(np.ceil(float(end)/float(resolution)))
         
         # Open the hdf5 file
-        da = dmp.dmp()
+        da = dmp()
         
         if user_id == 'test':
             resource_package = __name__
@@ -103,7 +103,7 @@ class hdf5:
         """
         Get a specific value for a given dataset, resoltuoin
         """
-        da = dmp.dmp()
+        da = dmp()
         file_obj = da.get_file_by_id(user_id, file_id)
         f = h5py.File(file_obj["file_path"], "r")
         
