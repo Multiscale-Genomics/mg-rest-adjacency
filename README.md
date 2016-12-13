@@ -4,7 +4,8 @@ Microservice RESTful API for the querying of Adjacency data stored in HDF5 files
 
 # Requirements
 - Python 2.7+
-- virtualenv
+- pyenv
+- pyenv virtualenv
 - pip
 - Python Modules
   - h5py
@@ -13,95 +14,55 @@ Microservice RESTful API for the querying of Adjacency data stored in HDF5 files
   - Flask-Restful
   - json
   - pytest
+  - Waitress
 
 # Installation
-## Initialise
+Cloneing from GitHub:
 ```
-virtualenv env
-source env/bin/activate
-
-cd rest
+git clone https://github.com/Multiscale-Genomics/mg-rest-adjacency.git
 ```
-
-## Require data files
-The dataset files for each of the genomes:
-
-- datasets.json
+To get this to be picked up by pip if part of a webserver then:
 ```
-{
-    "taxon_id": {
-        "9606": {
-            "accession": {
-                "GCA_000001405.14": {
-                    "datasets": ["rao2014"],
-                    "chromosomes": [
-                        ["1", 249250621],
-                        ["2", 243199373],
-                        ["3", 198022430],
-                        ["4", 191154276],
-                        ["5", 180915260],
-                        ...
-                    ]
-                }
-            }
-        }
-    }
-}
+pip install --editable .
+```
+This should install the required packages listed in the `setup.py` script.
+
+
+Installation via pip:
+```
+pip install git+https://github.com/Multiscale-Genomics/mg-rest-adjacency.git
 ```
 
-Matching HDF5 files listed in the datasets.json file
+# Setting up a server
 ```
-<author><year>.hdf5
-```
+git clone https://github.com/Multiscale-Genomics/mg-rest-adjacency.git
 
-## Starting the Service
+cd mg-rest-service
+pyenv virtualenv 2.7.12 mg-rest-adjacency
+pyenv activate mg-rest-service
+pip install git+https://github.com/Multiscale-Genomics/mg-dm-api.git
+pip install --editable .
+pip deactivate
 ```
-virtualenv env
-source env/bin/activate
-
-cd rest
-python app.py
+Starting the service:
 ```
-
-Place this in the boot scripts to get intialised as a service.
+nohup ${PATH_2_PYENV}/versions/2.7.12/envs/mg-rest-adjacency/bin/waitress-serve --listen=127.0.0.1:5002 rest.app:app &
+```
 
 # RESTful API
-## List taxon IDs
+## List end points
 ```
-wget http://<host>/rest/v0.0/getInteractions/
-```
-
-## List accessions
-```
-wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>
+wget http://127.0.0.1:5002/api/adjacency/getInteractions
 ```
 
-## List datasets
+## List details about a file
 ```
-wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>
-```
-
-## List available resolutions
-List the avaiable resolutions the are loaded for a given dataset
-```
-wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>
-```
-
-## List chromosomes
-List the chromosomes at the given resolution
-```
-wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>
-```
-
-## Size of the chromosome
-Show the size of the chromosome, the number of bins and a link to a minimal set
-```
-wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>
+wget http://127.0.0.1:5002/api/adjacency/getInteractions/getDetails?user_id=<string:user_id>&file_if=<string:file_id>
 ```
 
 ## Get interactions from chromosome range
 ```
-wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:start>/<int:end>
+wget http://127.0.0.1:5002/api/adjacency/getInteractions?user_id=<string:user_id>&file_id=<string:file_id>&res=<int:resolution>&chr=<string:chr_id>&start=<int:start>&end=<int:end>
 ```
 ### Optional arguments:
 - limit_region
@@ -113,15 +74,15 @@ wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession
   - Interactions with a specified chromosome
 
 ```
-wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chr_id>/<int:start>/<int:end>?limit_region=intra
-wget http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chrA_id>/<int:start>/<int:end>?limit_chr=<string:chrB_id>
+wget http://127.0.0.1:5002/api/adjacency/getInteractions?user_id=<string:user_id>&file_id=<string:file_id>&res=<int:resolution>&chr=<string:chr_id>&start=<int:start>&end=<int:end>&limit_region=intra
+wget http://127.0.0.1:5002/api/adjacency/getInteractions?user_id=<string:user_id>&file_id=<string:file_id>&res=<int:resolution>&chr=<string:chr_id>&start=<int:start>&end=<int:end>&limit_chr=<string:chrB_id>
 ```
 
 ### Interactions in TSV format
 By modifying the header to request `application/tsv` the following request:
 
 ```
-wget -S -q --header "Accept: application/tsv" http://<host>/rest/v0.0/getInteractions/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:chrA_id>/<int:start>/<int:end> -O test.out.tsv``
+wget -S -q --header "Accept: application/tsv" http://127.0.0.1:5002/api/adjacency/getInteractions?user_id=<string:user_id>&file_id=<string:file_id>&res=<int:resolution>&chr=<string:chr_id>&start=<int:start>&end=<int:end> -O test.out.tsv``
 
 ```
 
@@ -135,7 +96,7 @@ will return the interactions where columns represent:
 
 ## Get individual value
 ```
-wget http://<host>/rest/v0.0/getValue/<string:taxon_id>/<string:accession_id>/<string:dataset>/<int:resolution>/<string:bin_i>/<int:bin_j>
+wget http://127.0.0.1:5002/api/adjacency/getValue?user_id=<string:user_id>&file_id=<string:file_id>&res=<int:resolution>&pox_x=<int:pos_x>&pos_y=<int:pos_y>
 ```
 
 # Testing
