@@ -138,7 +138,7 @@ class GetInteractions(Resource):
             end = int(end)
             resolution = int(resolution)
         except Exception as e:
-            raise InvalidUsage("Use the correct parameters", status_code)
+            raise InvalidUsage("Use the correct parameters", status_code=400)
         
         request_path = request.path
         rp = request_path.split("/")
