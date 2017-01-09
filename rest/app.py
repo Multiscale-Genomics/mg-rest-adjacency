@@ -36,6 +36,29 @@ def output_tsv(data, code, headers=None):
         return resp
 
 
+class InvalidUsage(Exception):
+    status_code = 400
+
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv
+
+
+@app.errorhandler(InvalidUsage)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+
 class GetEndPoints(Resource):
     """
     Class to handle the http requests for returning information about the end
@@ -79,32 +102,43 @@ class GetDetails(Resource):
             "size": chr_param["size"]
         }
 
+
 class GetInteractions(Resource):
     """
     Class to handle the http requests for retrieving ranges of interactions from
     a given dataset
     """
     
+    def usage(self):
+        u = {}
+        return u
+    
     def get(self):
         user_id = request.args.get('user_id')
         file_id = request.args.get('file_id')
         chr_id = request.args.get('chr')
-        start = int(request.args.get('start'))
-        end = int(request.args.get('end'))
-        resolution = int(request.args.get('res'))
+        start = request.args.get('start')
+        end = request.args.get('end')
+        resolution = request.args.get('res')
         limit_region = request.args.get('limit_region')
         limit_chr = request.args.get('limit_chr')
         
-        if resolution == None:
-            return {
-                "error" : "No res parameter provided"
-            }
+        #if resolution == None:
+        #    return {
+        #        "error" : "No res parameter provided"
+        #    }
         
-        if start == None or end == None:
-            return {
-                "error" : "No start and/or end parameter provided"
-            }
+        #if start == None or end == None:
+        #    return {
+        #        "error" : "No start and/or end parameter provided"
+        #    }
         
+        try:
+            start = int(start)
+            end = int(end)
+            resolution = int(resolution)
+        except Exception as e:
+            raise InvalidUsage("Use the correct parameters", status_code)
         
         request_path = request.path
         rp = request_path.split("/")
