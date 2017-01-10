@@ -63,7 +63,7 @@ class GetDetails(Resource):
     number of bins and available resolutions
     """
     
-    def usage(self, error_message, status_code, parameters = []):
+    def usage(self, error_message, status_code, parameters = {}):
         usage = {
                     'link' : request.url,
                     'parameters' : {
@@ -92,7 +92,7 @@ class GetDetails(Resource):
 
         # Display the parameters available
         if sum([x is None for x in params]) == len(params):
-            return self.usage(None, 200, {'user_id' : user_id, 'file_id' : file_id})
+            return self.usage(None, 200)
         
         # ERROR - one of the required parameters is NoneType
         if sum([x is not None for x in params]) != len(params):
@@ -122,7 +122,7 @@ class GetInteractions(Resource):
     a given dataset
     """
     
-    def usage(self, error_message, status_code, parameters = []):
+    def usage(self, error_message, status_code, parameters = {}):
         usage = {
                     'link' : request.url,
                     'parameters' : {
@@ -163,7 +163,7 @@ class GetInteractions(Resource):
 
         # Display the parameters available
         if sum([x is None for x in params]) == len(params):
-            return self.usage(None, 200, {'user_id' : user_id, 'file_id' : file_id, 'chr_id' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr})
+            return self.usage(None, 200)
         
         # ERROR - one of the required parameters is NoneType
         if sum([x is not None for x in params]) != len(params):
@@ -207,7 +207,7 @@ class GetValue(Resource):
     dataset
     """
     
-    def usage(self, error_message, status_code, parameters = []):
+    def usage(self, error_message, status_code, parameters = {}):
         usage = {
                     'link' : request.url,
                     'parameters' : {
@@ -242,7 +242,7 @@ class GetValue(Resource):
 
         # Display the parameters available
         if sum([x is None for x in params]) == len(params):
-            return self.usage(None, 200, {'user_id' : user_id, 'file_id' : file_id, 'res' : resolution, 'pos_x' : bin_i, 'pos_y' : bin_j})
+            return self.usage(None, 200)
         
         # ERROR - one of the required parameters is NoneType
         if sum([x is not None for x in params]) != len(params):
