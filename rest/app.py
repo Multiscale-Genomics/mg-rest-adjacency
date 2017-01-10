@@ -65,7 +65,10 @@ class GetDetails(Resource):
     
     def usage(self, error_message, status_code, parameters = {}):
         usage = {
-                    'link' : request.url,
+                    '_links' : {
+                        '_self' : request.base_url,
+                        'parent': request.url_root + '/api/adjacency'
+                    },
                     'parameters' : {
                         'user_id' : ['User ID', 'str', 'REQUIRED'],
                         'file_id' : ['File ID', 'str', 'REQUIRED'],
@@ -108,7 +111,7 @@ class GetDetails(Resource):
         return {
             '_links': {
                 'self': request.base_url,
-                'parent': request.url_root + 'adjacency'
+                'parent': request.url_root + '/api/adjacency'
             },
             'chromosomes': x["chromosomes"],
             "bins": chr_param["bins"],
@@ -124,7 +127,10 @@ class GetInteractions(Resource):
     
     def usage(self, error_message, status_code, parameters = {}):
         usage = {
-                    'link' : request.url,
+                    '_links' : {
+                        '_self' : request.base_url,
+                        'parent': request.url_root + '/api/adjacency'
+                    },
                     'parameters' : {
                         'user_id' : ['User ID', 'str', 'REQUIRED'],
                         'file_id' : ['File ID', 'str', 'REQUIRED'],
@@ -209,7 +215,10 @@ class GetValue(Resource):
     
     def usage(self, error_message, status_code, parameters = {}):
         usage = {
-                    'link' : request.url,
+                    '_links' : {
+                        '_self' : request.base_url,
+                        'parent': request.url_root + '/api/adjacency'
+                    },
                     'parameters' : {
                         'user_id' : ['User ID', 'str', 'REQUIRED'],
                         'file_id' : ['File ID', 'str', 'REQUIRED'],
