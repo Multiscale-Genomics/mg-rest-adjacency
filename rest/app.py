@@ -20,6 +20,8 @@ from flask_restful import Api, Resource
 from hdf5_reader import hdf5
 
 app = Flask(__name__)
+#app.config['DEBUG'] = False
+
 api = Api(app)
 
 @api.representation('application/tsv')
@@ -34,29 +36,6 @@ def output_tsv(data, code, headers=None):
         resp = make_response(outstr, code)
         resp.headers.extend(headers or {})
         return resp
-
-
-class InvalidUsage(Exception):
-    status_code = 400
-
-    def __init__(self, message, status_code=None, payload=None):
-        Exception.__init__(self)
-        self.message = message
-        if status_code is not None:
-            self.status_code = status_code
-        self.payload = payload
-
-    def to_dict(self):
-        rv = dict(self.payload or ())
-        rv['message'] = self.message
-        return rv
-
-
-@app.errorhandler(InvalidUsage)
-def handle_invalid_usage(error):
-    response = jsonify(error.to_dict())
-    response.status_code = error.status_code
-    return response
 
 
 class GetEndPoints(Resource):
@@ -84,7 +63,41 @@ class GetDetails(Resource):
     number of bins and available resolutions
     """
     
-    def get(self, user_id, file_id, resolution, chr_id):
+    def usage(self, error_message, status_code, parameters = []):
+        usage = {
+                    'link' : request.url,
+                    'parameters' : {
+                        'user_id' : ['User ID', 'str', 'REQUIRED'],
+                        'file_id' : ['File ID', 'str', 'REQUIRED'],
+                    }
+                }
+        message = {
+                      'usage' : usage,
+                      'status_code' : status_code
+                  }
+
+        if len(parameters) > 0:
+            message['provided_parameters'] = parameters
+        
+        if error_message != None:
+            message['error'] = error_message
+
+        return message
+    
+    def get(self):
+        user_id = request.args.get('user_id')
+        file_id = request.args.get('file_id')
+        
+        params = [user_id, file_id]
+
+        # Display the parameters available
+        if sum([x is None for x in params]) == len(params):
+            return self.usage(None, 200, {'user_id' : user_id, 'file_id' : file_id})
+        
+        # ERROR - one of the required parameters is NoneType
+        if sum([x is not None for x in params]) != len(params):
+            return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id}), 400
+        
         request_path = request.path
         rp = request_path.split("/")
         
@@ -109,9 +122,32 @@ class GetInteractions(Resource):
     a given dataset
     """
     
-    def usage(self):
-        u = {}
-        return u
+    def usage(self, error_message, status_code, parameters = []):
+        usage = {
+                    'link' : request.url,
+                    'parameters' : {
+                        'user_id' : ['User ID', 'str', 'REQUIRED'],
+                        'file_id' : ['File ID', 'str', 'REQUIRED'],
+                        'chr_id'  : ['Chromosome ID', 'str', 'REQUIRED'],
+                        'start'   : ['Chromosome start position', 'int', 'REQUIRED'],
+                        'end'     : ['Chromosome end position', 'int', 'REQUIRED'],
+                        'res'     : ['Resolution', 'int', 'REQUIRED'],
+                        'limit_region' : ['Limit interactions ', 'str', 'OPTIONAL'],
+                        'limit_chr' : ['Limit interactions to interacting with a specific chromosome', 'str', 'OPTIONAL']
+                    }
+                }
+        message = {
+                      'usage' : usage,
+                      'status_code' : status_code
+                  }
+        
+        if len(parameters) > 0:
+            message['provided_parameters'] = parameters
+        
+        if error_message != None:
+            message['error'] = error_message
+
+        return message
     
     def get(self):
         user_id = request.args.get('user_id')
@@ -123,22 +159,23 @@ class GetInteractions(Resource):
         limit_region = request.args.get('limit_region')
         limit_chr = request.args.get('limit_chr')
         
-        #if resolution == None:
-        #    return {
-        #        "error" : "No res parameter provided"
-        #    }
+        params = [user_id, file_id, chr_id, start, end, resolution]
+
+        # Display the parameters available
+        if sum([x is None for x in params]) == len(params):
+            return self.usage(None, 200, {'user_id' : user_id, 'file_id' : file_id, 'chr_id' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr})
         
-        #if start == None or end == None:
-        #    return {
-        #        "error" : "No start and/or end parameter provided"
-        #    }
-        
+        # ERROR - one of the required parameters is NoneType
+        if sum([x is not None for x in params]) != len(params):
+            return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr_id' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr}), 400
+
         try:
             start = int(start)
             end = int(end)
             resolution = int(resolution)
         except Exception as e:
-            raise InvalidUsage("Use the correct parameters", status_code=400)
+            # ERROR - one of the parameters is not of integer type
+            return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr_id' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr}), 400
         
         request_path = request.path
         rp = request_path.split("/")
@@ -170,12 +207,54 @@ class GetValue(Resource):
     dataset
     """
     
+    def usage(self, error_message, status_code, parameters = []):
+        usage = {
+                    'link' : request.url,
+                    'parameters' : {
+                        'user_id' : ['User ID', 'str', 'REQUIRED'],
+                        'file_id' : ['File ID', 'str', 'REQUIRED'],
+                        'res'     : ['Resolution', 'int', 'REQUIRED'],
+                        'bin_i'   : ['Position i', 'int', 'REQUIRED'],
+                        'bin_j'   : ['Position j', 'int', 'REQUIRED'],
+                    }
+                }
+        message = {
+                      'usage' : usage,
+                      'status_code' : status_code
+                  }
+        
+        if len(parameters) > 0:
+            message['provided_parameters'] = parameters
+        
+        if error_message != None:
+            message['error'] = error_message
+
+        return message
+    
     def get(self):
         user_id = request.args.get('user_id')
         file_id = request.args.get('file_id')
-        resolution = int(request.args.get('res'))
-        bin_i = int(request.args.get('pos_x'))
-        bin_j = int(request.args.get('pos_y'))
+        resolution = request.args.get('res')
+        bin_i = request.args.get('pos_x')
+        bin_j = request.args.get('pos_y')
+        
+        params = [user_id, file_id, resolution, bin_i, bin_j]
+
+        # Display the parameters available
+        if sum([x is None for x in params]) == len(params):
+            return self.usage(None, 200, {'user_id' : user_id, 'file_id' : file_id, 'res' : resolution, 'pos_x' : bin_i, 'pos_y' : bin_j})
+        
+        # ERROR - one of the required parameters is NoneType
+        if sum([x is not None for x in params]) != len(params):
+            return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : bin_i, 'pos_y' : bin_j}), 400
+
+        try:
+            bin_i = int(bin_i)
+            bin_j = int(bin_j)
+            resolution = int(resolution)
+        except Exception as e:
+            # ERROR - one of the parameters is not of integer type
+            return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : bin_i, 'pos_y' : bin_j}), 400
         
         h5 = hdf5()
         meta_data = h5.get_details(user_id, file_id)
