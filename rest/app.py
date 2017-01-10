@@ -303,7 +303,10 @@ class ping(Resource):
             "license": release.__license__,
             "name":    release.__rest_name__,
             "description": release.__description__,
-            "end_points":  {}
+            "_links" : {
+                '_self' : request.url_root + 'api/adjacency/ping'
+                '_parent' : request.url_root + 'api/adjacency'
+            }
         }
         return res
 
