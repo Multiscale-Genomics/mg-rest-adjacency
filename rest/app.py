@@ -67,7 +67,7 @@ class GetDetails(Resource):
         usage = {
                     '_links' : {
                         '_self' : request.base_url,
-                        'parent': request.url_root + '/api/adjacency'
+                        '_parent': request.url_root + 'api/adjacency'
                     },
                     'parameters' : {
                         'user_id' : ['User ID', 'str', 'REQUIRED'],
@@ -110,8 +110,8 @@ class GetDetails(Resource):
         
         return {
             '_links': {
-                'self': request.base_url,
-                'parent': request.url_root + '/api/adjacency'
+                '_self': request.base_url,
+                '_parent': request.url_root + 'api/adjacency'
             },
             'chromosomes': x["chromosomes"],
             "bins": chr_param["bins"],
@@ -129,7 +129,7 @@ class GetInteractions(Resource):
         usage = {
                     '_links' : {
                         '_self' : request.base_url,
-                        'parent': request.url_root + '/api/adjacency'
+                        '_parent': request.url_root + 'api/adjacency'
                     },
                     'parameters' : {
                         'user_id' : ['User ID', 'str', 'REQUIRED'],
@@ -193,8 +193,8 @@ class GetInteractions(Resource):
         
         return {
             '_links': {
-                'self': request.url,
-                'parent': request.url_root + '/api/adjacency'
+                '_self': request.url,
+                '_parent': request.url_root + 'api/adjacency'
             },
             'resolution': resolution,
             'chr_id': chr_id,
@@ -217,7 +217,7 @@ class GetValue(Resource):
         usage = {
                     '_links' : {
                         '_self' : request.base_url,
-                        'parent': request.url_root + '/api/adjacency'
+                        '_parent': request.url_root + 'api/adjacency'
                     },
                     'parameters' : {
                         'user_id' : ['User ID', 'str', 'REQUIRED'],
@@ -277,7 +277,7 @@ class GetValue(Resource):
         
         return {
             '_links': {
-              'self': request.url_root + 'api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(bin_i) + "&pos_y=" + str(bin_j)
+              '_self': request.url_root + 'api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(bin_i) + "&pos_y=" + str(bin_j)
             },
             'genome': accession_id,
             'chrA': chrA_id,
