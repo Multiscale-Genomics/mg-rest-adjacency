@@ -50,7 +50,7 @@ class GetEndPoints(Resource):
                 '_self': request.base_url,
                 '_details': request.url_root + 'api/adjacency/details',
                 '_getInteractions': request.url_root + 'api/adjacency/getInteractions',
-                '_getValue': request.url_root + 'api/adjacency/getValues',
+                '_getValue': request.url_root + 'api/adjacency/getValue',
                 '_ping': request.url_root + 'api/adjacency/ping',
                 '_parent': request.url_root + 'api'
             }
