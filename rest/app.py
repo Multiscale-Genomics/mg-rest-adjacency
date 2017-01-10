@@ -304,7 +304,7 @@ class ping(Resource):
             "name":    release.__rest_name__,
             "description": release.__description__,
             "_links" : {
-                '_self' : request.url_root + 'api/adjacency/ping'
+                '_self' : request.url_root + 'api/adjacency/ping',
                 '_parent' : request.url_root + 'api/adjacency'
             }
         }
