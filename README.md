@@ -37,11 +37,11 @@ pip install git+https://github.com/Multiscale-Genomics/mg-rest-adjacency.git
 ```
 git clone https://github.com/Multiscale-Genomics/mg-rest-adjacency.git
 
-cd mg-rest-service
+cd mg-rest-adjacency
 pyenv virtualenv 2.7.12 mg-rest-adjacency
 pyenv activate mg-rest-service
 pip install git+https://github.com/Multiscale-Genomics/mg-dm-api.git
-pip install --editable .
+pip install -e .
 pip deactivate
 ```
 Starting the service:
