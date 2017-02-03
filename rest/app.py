@@ -48,11 +48,11 @@ class GetEndPoints(Resource):
         return {
             '_links': {
                 '_self': request.base_url,
-                '_details': request.url_root + 'api/adjacency/details',
-                '_getInteractions': request.url_root + 'api/adjacency/getInteractions',
-                '_getValue': request.url_root + 'api/adjacency/getValue',
-                '_ping': request.url_root + 'api/adjacency/ping',
-                '_parent': request.url_root + 'api'
+                '_details': request.url_root + 'mug/api/adjacency/details',
+                '_getInteractions': request.url_root + 'mug/api/adjacency/getInteractions',
+                '_getValue': request.url_root + 'mug/api/adjacency/getValue',
+                '_ping': request.url_root + 'mug/api/adjacency/ping',
+                '_parent': request.url_root + 'mug/api'
             }
         }
 
@@ -67,7 +67,7 @@ class GetDetails(Resource):
         usage = {
                     '_links' : {
                         '_self' : request.base_url,
-                        '_parent': request.url_root + 'api/adjacency'
+                        '_parent': request.url_root + 'mug/api/adjacency'
                     },
                     'parameters' : {
                         'user_id' : ['User ID', 'str', 'REQUIRED'],
@@ -111,7 +111,7 @@ class GetDetails(Resource):
         return {
             '_links': {
                 '_self': request.base_url,
-                '_parent': request.url_root + 'api/adjacency'
+                '_parent': request.url_root + 'mug/api/adjacency'
             },
             'chromosomes': x["chromosomes"],
             "bins": chr_param["bins"],
@@ -129,7 +129,7 @@ class GetInteractions(Resource):
         usage = {
                     '_links' : {
                         '_self' : request.base_url,
-                        '_parent': request.url_root + 'api/adjacency'
+                        '_parent': request.url_root + 'mug/api/adjacency'
                     },
                     'parameters' : {
                         'user_id' : ['User ID', 'str', 'REQUIRED'],
@@ -185,7 +185,7 @@ class GetInteractions(Resource):
         
         request_path = request.path
         rp = request_path.split("/")
-        value_url = request.url_root + 'api/adjacency/getValue'
+        value_url = request.url_root + 'mug/api/adjacency/getValue'
         
         h5 = hdf5()
         x = h5.get_range(user_id, file_id, resolution, chr_id, start, end, limit_region, limit_chr, value_url)
@@ -194,7 +194,7 @@ class GetInteractions(Resource):
         return {
             '_links': {
                 '_self': request.url,
-                '_parent': request.url_root + 'api/adjacency'
+                '_parent': request.url_root + 'mug/api/adjacency'
             },
             'resolution': resolution,
             'chr_id': chr_id,
@@ -217,7 +217,7 @@ class GetValue(Resource):
         usage = {
                     '_links' : {
                         '_self' : request.base_url,
-                        '_parent': request.url_root + 'api/adjacency'
+                        '_parent': request.url_root + 'mug/api/adjacency'
                     },
                     'parameters' : {
                         'user_id' : ['User ID', 'str', 'REQUIRED'],
@@ -277,7 +277,7 @@ class GetValue(Resource):
         
         return {
             '_links': {
-              '_self': request.url_root + 'api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(bin_i) + "&pos_y=" + str(bin_j)
+              '_self': request.url_root + 'mug/api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(bin_i) + "&pos_y=" + str(bin_j)
             },
             'genome': accession_id,
             'chrA': chrA_id,
@@ -295,7 +295,7 @@ class ping(Resource):
     """
     
     def get(self):
-        import release
+        from . import release
         res = {
             "status":  "ready",
             "version": release.__version__,
@@ -304,8 +304,8 @@ class ping(Resource):
             "name":    release.__rest_name__,
             "description": release.__description__,
             "_links" : {
-                '_self' : request.url_root + 'api/adjacency/ping',
-                '_parent' : request.url_root + 'api/adjacency'
+                '_self' : request.url_root + 'mug/api/adjacency/ping',
+                '_parent' : request.url_root + 'mug/api/adjacency'
             }
         }
         return res
@@ -314,13 +314,13 @@ class ping(Resource):
 Define the URIs and their matching methods
 """
 #   List the available end points for this service
-api.add_resource(GetEndPoints, "/api/adjacency", endpoint='adjacency_root')
+api.add_resource(GetEndPoints, "/mug/api/adjacency", endpoint='adjacency_root')
 
 #   Show the size of the chromosome, the number of bins and available resolutions
 #   Parameters:
 #    - file_id - (string)
 #    - user_id - (string)
-api.add_resource(GetDetails, "/api/adjacency/details", endpoint='meta_data')
+api.add_resource(GetDetails, "/mug/api/adjacency/details", endpoint='meta_data')
 
 #   List the interactions for a given region
 #   Parameters:
@@ -333,7 +333,7 @@ api.add_resource(GetDetails, "/api/adjacency/details", endpoint='meta_data')
 #   Parameters (optional):
 #    - limit_region - 
 #    - limit_chr    - Chromosome (string)
-api.add_resource(GetInteractions, "/api/adjacency/getInteractions", endpoint='values')
+api.add_resource(GetInteractions, "/mug/api/adjacency/getInteractions", endpoint='values')
 
 #   Get a specific edge value for an interaction
 #   Parameters:
@@ -342,10 +342,10 @@ api.add_resource(GetInteractions, "/api/adjacency/getInteractions", endpoint='va
 #    - pox_y   - (int)
 #    - file_id - (string)
 #    - user_id - (string)
-api.add_resource(GetValue, "/api/adjacency/getValue", endpoint="value")
+api.add_resource(GetValue, "/mug/api/adjacency/getValue", endpoint="value")
 
 #   Service ping
-api.add_resource(ping, "/api/adjacency/ping", endpoint='adjacency-ping')
+api.add_resource(ping, "/mug/api/adjacency/ping", endpoint='adjacency-ping')
 
 
 """

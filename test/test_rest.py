@@ -19,7 +19,7 @@ import pytest
 import tempfile
 import json
 
-from context import app
+from .context import app
 
 @pytest.fixture
 def client(request):
