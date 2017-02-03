@@ -42,9 +42,9 @@ class hdf5:
         
         resolutions = f.keys()
         dset = f[str(resolutions[0])]
-        chr_param = _calculate_chr_param(resolutions, dset.attrs["chromosomes"])
+        chr_param = self._calculate_chr_param(resolutions, dset.attrs["chromosomes"])
         return {
-            "chromosomes" : dset.attrs["chromosomes"],
+            "chromosomes" : [list(c) for c in dset.attrs["chromosomes"]],
             "chr_param"   : chr_param,
             "resolutions" : resolutions}
     
@@ -137,7 +137,7 @@ class hdf5:
         
         genomeLen = 0
         binCount = [0]*len(binSizes)
-        for i in xrange(len(chromosomes)):
+        for i in range(len(chromosomes)):
             c = chromosomes[i]
             
             genomeLen += int(c[1])

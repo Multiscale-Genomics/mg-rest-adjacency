@@ -108,14 +108,13 @@ class GetDetails(Resource):
         x = h5.get_details(user_id, file_id)
         chr_param = x["chr_param"]
         
+        
         return {
             '_links': {
                 '_self': request.base_url,
                 '_parent': request.url_root + 'mug/api/adjacency'
             },
-            'chromosomes': x["chromosomes"],
-            "bins": chr_param["bins"],
-            "size": chr_param["size"]
+            'chromosomes': [{'chromosome' : c[0], 'length' : c[1]} for c in x["chromosomes"]]
         }
 
 
