@@ -29,10 +29,17 @@ class hdf5:
         """
         Return a list of the available resolutions in a given HDF5 file
         """
-        cnf_loc=os.path.dirname(os.path.abspath(__file__)) + '/mongodb.cnf'
-        da = dmp(cnf_loc)
-        file_obj = da.get_file_by_id(user_id, file_id)
-        f = h5py.File(file_obj["file_path"], "r")
+        
+        if user_id == 'test':
+            resource_package = __name__
+            resource_path = os.path.join(os.path.dirname(__file__), 'rao2014.hdf5')
+            f = h5py.File(resource_path, "r")
+        else:
+            cnf_loc=os.path.dirname(os.path.abspath(__file__)) + '/mongodb.cnf'
+            da = dmp(cnf_loc, test_data)
+            file_obj = da.get_file_by_id(user_id, file_id)
+            f = h5py.File(file_obj["file_path"], "r")
+        
         resolutions = f.keys()
         dset = f[str(resolutions[0])]
         chr_param = _calculate_chr_param(resolutions, dset.attrs["chromosomes"])
@@ -52,15 +59,14 @@ class hdf5:
         x = int(np.floor(float(start)/float(resolution)))
         y = int(np.ceil(float(end)/float(resolution)))
         
-        # Open the hdf5 file
-        cnf_loc=os.path.dirname(os.path.abspath(__file__)) + '/mongodb.cnf'
-        da = dmp(cnf_loc)
-        
         if user_id == 'test':
             resource_package = __name__
             resource_path = os.path.join(os.path.dirname(__file__), 'rao2014.hdf5')
             f = h5py.File(resource_path, "r")
         else:
+            # Open the hdf5 file
+            cnf_loc=os.path.dirname(os.path.abspath(__file__)) + '/mongodb.cnf'
+            da = dmp(cnf_loc)
             file_obj = da.get_file_by_id(user_id, file_id)
             f = h5py.File(file_obj["file_path"], "r")
         
@@ -105,10 +111,15 @@ class hdf5:
         """
         Get a specific value for a given dataset, resoltuoin
         """
-        cnf_loc=os.path.dirname(os.path.abspath(__file__)) + '/mongodb.cnf'
-        da = dmp(cnf_loc)
-        file_obj = da.get_file_by_id(user_id, file_id)
-        f = h5py.File(file_obj["file_path"], "r")
+        if user_id == 'test':
+            resource_package = __name__
+            resource_path = os.path.join(os.path.dirname(__file__), 'rao2014.hdf5')
+            f = h5py.File(resource_path, "r")
+        else:
+            cnf_loc=os.path.dirname(os.path.abspath(__file__)) + '/mongodb.cnf'
+            da = dmp(cnf_loc, test_data)
+            file_obj = da.get_file_by_id(user_id, file_id)
+            f = h5py.File(file_obj["file_path"], "r")
         
         dset = f[str(resolution)]
         value = dset[int(bin_i), int(bin_j)]
