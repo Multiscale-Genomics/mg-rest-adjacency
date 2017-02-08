@@ -104,7 +104,7 @@ class hdf5:
                 y_start = i[1]*int(resolution)
             else:
                 y_start = (i[1]-chr_param[y_chr]["bins"][resolution][1])*int(resolution)
-            r = {"chrA": chr_id, "startA": x_start, "chrB": y_chr, "startB": y_start, "value": int(result[i[0],i[1]]), '_links': {'self': value_url + "/getInteractions?user_id=" + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(i[0]+x+xy_offset) + "&pos_y=" + str(i[1])}}
+            r = {"chrA": chr_id, "startA": x_start, "chrB": y_chr, "startB": y_start, "value": int(result[i[0],i[1]]), '_links': {'self': value_url + "?user_id=" + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(i[0]+x+xy_offset) + "&pos_y=" + str(i[1])}}
             results.append(r)
         
         return {"log": logText, "results": results}
