@@ -115,8 +115,7 @@ class GetDetails(Resource):
                 '_parent': request.url_root + 'mug/api/adjacency'
             },
             'chromosomes' : [{'chromosome' : c[0], 'length' : c[1]} for c in x["chromosomes"]],
-            'resolutions' : x['resolutions'],
-            'chr_param'   : chr_param
+            'resolutions' : x['resolutions']
         }
 
 
