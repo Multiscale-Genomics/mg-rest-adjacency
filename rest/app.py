@@ -174,14 +174,20 @@ class GetInteractions(Resource):
         # ERROR - one of the required parameters is NoneType
         if sum([x is not None for x in params]) != len(params):
             return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr}), 400
-
+        
         try:
             start = int(start)
             end = int(end)
             resolution = int(resolution)
         except Exception as e:
             # ERROR - one of the parameters is not of integer type
-            return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr}), 400
+            return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr})
+        
+        x = h5.get_details(user_id, file_id)
+        
+        # ERROR - the requested resolution is not available
+        if resolution not in x["resolution"]
+            return self.usage('Resolution Not Available', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr})
         
         request_path = request.path
         rp = request_path.split("/")
