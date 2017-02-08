@@ -183,17 +183,17 @@ class GetInteractions(Resource):
             # ERROR - one of the parameters is not of integer type
             return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr})
         
-        x = h5.get_details(user_id, file_id)
+        h5 = hdf5()
+        details = h5.get_details(user_id, file_id)
         
         # ERROR - the requested resolution is not available
-        if resolution not in x["resolution"]:
+        if resolution not in details["resolutions"]:
             return self.usage('Resolution Not Available', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr})
         
         request_path = request.path
         rp = request_path.split("/")
         value_url = request.url_root + 'mug/api/adjacency/getValue'
         
-        h5 = hdf5()
         x = h5.get_range(user_id, file_id, resolution, chr_id, start, end, limit_region, limit_chr, value_url)
         #app.logger.warn(x["log"])
         
