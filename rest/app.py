@@ -186,7 +186,7 @@ class GetInteractions(Resource):
         x = h5.get_details(user_id, file_id)
         
         # ERROR - the requested resolution is not available
-        if resolution not in x["resolution"]
+        if resolution not in x["resolution"]:
             return self.usage('Resolution Not Available', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr})
         
         request_path = request.path
