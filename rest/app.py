@@ -164,6 +164,7 @@ class GetInteractions(Resource):
         resolution = request.args.get('res')
         limit_region = request.args.get('limit_region')
         limit_chr = request.args.get('limit_chr')
+        no_links   = request.args.get('no_links')
         
         params = [user_id, file_id, chr_id, start, end, resolution]
 
@@ -194,7 +195,7 @@ class GetInteractions(Resource):
         rp = request_path.split("/")
         value_url = request.url_root + 'mug/api/adjacency/getValue'
         
-        x = h5.get_range(user_id, file_id, resolution, chr_id, start, end, limit_region, limit_chr, value_url)
+        x = h5.get_range(user_id, file_id, resolution, chr_id, start, end, limit_region, limit_chr, value_url, no_links)
         #app.logger.warn(x["log"])
         
         return {

@@ -49,7 +49,7 @@ class hdf5:
             "resolutions" : resolutions}
     
     
-    def get_range(self, user_id, file_id, resolution, chr_id, start, end, limit_region=None, limit_chr=None, value_url = '/rest/v0.0/getValue/9606'):
+    def get_range(self, user_id, file_id, resolution, chr_id, start, end, limit_region=None, limit_chr=None, value_url = '/api/getValue', no_links=None):
         """
         Get the interactions that happen within a defined region on a specific
         chromosome. Returns inter and intra interactions with the defined region.
@@ -104,7 +104,10 @@ class hdf5:
                 y_start = i[1]*int(resolution)
             else:
                 y_start = (i[1]-chr_param[y_chr]["bins"][resolution][1])*int(resolution)
-            r = {"chrA": chr_id, "startA": x_start, "chrB": y_chr, "startB": y_start, "value": int(result[i[0],i[1]]), '_links': {'self': value_url + "?user_id=" + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(i[0]+x+xy_offset) + "&pos_y=" + str(i[1])}}
+            
+            r = {"chrA": chr_id, "startA": x_start, "chrB": y_chr, "startB": y_start, "value": int(result[i[0],i[1]])}
+            if no_links != None:
+                r['_links'] = {'self': value_url + "?user_id=" + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(i[0]+x+xy_offset) + "&pos_y=" + str(i[1])}
             results.append(r)
         
         return {"log": logText, "results": results}
