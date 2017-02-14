@@ -217,8 +217,9 @@ class GetInteractions(Resource):
             'chr': chr_id,
             'start': start,
             'end': end,
-            'limit_region': limit_region,
             'limit_chr': limit_chr,
+            'limit_start' : limit_start,
+            'limit_end' : limit_end,
             'interaction_count': len(x["results"]),
             'values': x["results"],
             'log': x["log"]
