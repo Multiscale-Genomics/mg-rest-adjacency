@@ -49,7 +49,7 @@ class hdf5:
             "resolutions" : resolutions}
     
     
-    def get_range(self, user_id, file_id, resolution, chr_id, start, end, limit_region=None, limit_chr=None, value_url = '/api/getValue', no_links=None):
+    def get_range(self, user_id, file_id, resolution, chr_id, start, end, limit_chr=None, limit_start=None, limit_end=None, value_url = '/api/getValue', no_links=None):
         """
         Get the interactions that happen within a defined region on a specific
         chromosome. Returns inter and intra interactions with the defined region.
@@ -82,9 +82,17 @@ class hdf5:
         
         startB = 0
         if limit_chr != None:
-            startB = chr_param[limit_chr]["bins"][resolution][1]
-            endB = startB + chr_param[limit_chr]["bins"][resolution][0]
-            result = dset[(x+xy_offset):(y+xy_offset),startB:endB]
+            if limit_start != None and limit_end != None:
+                startB = int(np.floor(float(limit_start)/float(resolution)))
+                endB = int(np.ceil(float(limit_end)/float(resolution)))
+                xyB_offset = chr_param[limit_chr]["bins"][resolution][1]
+                
+                result = dset[(x+xy_offset):(y+xy_offset),(startB+xyB_offset):(endB+xyB_offset)]
+            else:
+                startB = chr_param[limit_chr]["bins"][resolution][1]
+                endB = startB + chr_param[limit_chr]["bins"][resolution][0]
+                
+                result = dset[(x+xy_offset):(y+xy_offset),startB:endB]
         else:
             result = dset[(x+xy_offset):(y+xy_offset),:]
         f.close()
@@ -95,7 +103,7 @@ class hdf5:
         logText = []
         
         r_index = np.transpose(np.nonzero(result))
-        logText.append({"coord": {"x0": (x+xy_offset), "x1": (y+xy_offset)}, "r_index": len(r_index), "param": {"start": start, "x": x, "end": end, "y": y, "xy_offset": xy_offset, "resolution": resolution, "chr_id": chr_id}, 'chr_param': chr_param})
+        logText.append({"coord": {"x0": (x+xy_offset), "x1": (y+xy_offset)}, "r_index": len(r_index), "param": {"start": start, "x": x, "end": end, "y": y, "xy_offset": xy_offset, "resolution": resolution, "chr_id": chr_id, "startB" : startB, "endB" : endB, "limit_chr" : limit_chr}, 'chr_param': chr_param})
         
         for i in r_index:
             x_start = ((i[0]+x)*int(resolution))

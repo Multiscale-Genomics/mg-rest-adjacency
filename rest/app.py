@@ -138,7 +138,6 @@ class GetInteractions(Resource):
                         'start'   : ['Chromosome start position', 'int', 'REQUIRED'],
                         'end'     : ['Chromosome end position', 'int', 'REQUIRED'],
                         'res'     : ['Resolution', 'int', 'REQUIRED'],
-                        'limit_region' : ['Limit interactions ', 'str', 'OPTIONAL'],
                         'limit_chr' : ['Limit interactions to interacting with a specific chromosome', 'str', 'OPTIONAL']
                     }
                 }
@@ -162,8 +161,9 @@ class GetInteractions(Resource):
         start = request.args.get('start')
         end = request.args.get('end')
         resolution = request.args.get('res')
-        limit_region = request.args.get('limit_region')
         limit_chr = request.args.get('limit_chr')
+        limit_start = request.args.get('limit_start')
+        limit_end = request.args.get('limit_end')
         no_links   = request.args.get('no_links')
         
         params = [user_id, file_id, chr_id, start, end, resolution]
@@ -174,14 +174,14 @@ class GetInteractions(Resource):
         
         # ERROR - one of the required parameters is NoneType
         if sum([x is not None for x in params]) != len(params):
-            return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr}), 400
+            return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr}), 400
         
         h5 = hdf5()
         details = h5.get_details(user_id, file_id)
         
         # ERROR - the requested resolution is not available
         if resolution not in details["resolutions"]:
-            return self.usage('Resolution Not Available', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr})
+            return self.usage('Resolution Not Available', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr})
         
         try:
             start = int(start)
@@ -189,13 +189,23 @@ class GetInteractions(Resource):
             resolution = int(resolution)
         except Exception as e:
             # ERROR - one of the parameters is not of integer type
-            return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_region' : limit_region, 'limit_chr' : limit_chr})
+            return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr})
+        
+        if limit_start is not None or limit_end is not None:
+            if limit_chr is None:
+                return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
+            try:
+                limit_start = int(limit_start)
+                limit_end = int(limit_end)
+            except Exception as e:
+                # ERROR - one of the parameters is not of integer type
+                return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
         
         request_path = request.path
         rp = request_path.split("/")
         value_url = request.url_root + 'mug/api/adjacency/getValue'
         
-        x = h5.get_range(user_id, file_id, resolution, chr_id, start, end, limit_region, limit_chr, value_url, no_links)
+        x = h5.get_range(user_id, file_id, resolution, chr_id, start, end, limit_chr, limit_start, limit_end, value_url, no_links)
         #app.logger.warn(x["log"])
         
         return {
