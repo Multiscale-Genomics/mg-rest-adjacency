@@ -109,7 +109,7 @@ class hdf5:
             x_start = ((i[0]+x)*int(resolution))
             y_chr = self.get_chromosome_from_array_index(chr_param, int(resolution), i[1]+startB)
             if limit_chr != None:
-                y_start = i[1]*int(resolution)
+                y_start = (i[1]+startB)*int(resolution)
             else:
                 y_start = (i[1]-chr_param[y_chr]["bins"][resolution][1])*int(resolution)
             
