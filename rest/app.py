@@ -138,7 +138,9 @@ class GetInteractions(Resource):
                         'start'   : ['Chromosome start position', 'int', 'REQUIRED'],
                         'end'     : ['Chromosome end position', 'int', 'REQUIRED'],
                         'res'     : ['Resolution', 'int', 'REQUIRED'],
-                        'limit_chr' : ['Limit interactions to interacting with a specific chromosome', 'str', 'OPTIONAL']
+                        'limit_chr' : ['Limit interactions to interacting with a specific chromosome', 'str', 'OPTIONAL'],
+                        'limit_start' : ['Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_end are defined', 'int', 'OPTIONAL'],
+                        'limit_end' : ['Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_start are defined', 'int', 'OPTIONAL'],
                     }
                 }
         message = {
@@ -174,14 +176,14 @@ class GetInteractions(Resource):
         
         # ERROR - one of the required parameters is NoneType
         if sum([x is not None for x in params]) != len(params):
-            return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr}), 400
+            return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end}), 400
         
         h5 = hdf5()
         details = h5.get_details(user_id, file_id)
         
         # ERROR - the requested resolution is not available
         if resolution not in details["resolutions"]:
-            return self.usage('Resolution Not Available', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr})
+            return self.usage('Resolution Not Available', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
         
         try:
             start = int(start)
