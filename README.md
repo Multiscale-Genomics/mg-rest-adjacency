@@ -49,56 +49,6 @@ Starting the service:
 nohup ${PATH_2_PYENV}/versions/2.7.12/envs/mg-rest-adjacency/bin/waitress-serve --listen=127.0.0.1:5002 rest.app:app &
 ```
 
-# RESTful API
-## List end points
-```
-wget http://127.0.0.1:5002/api/adjacency/getInteractions
-```
-
-## List details about a file
-```
-wget http://127.0.0.1:5002/api/adjacency/getInteractions/getDetails?user_id=<string:user_id>&file_if=<string:file_id>
-```
-
-## Get interactions from chromosome range
-```
-wget http://127.0.0.1:5002/api/adjacency/getInteractions?user_id=<string:user_id>&file_id=<string:file_id>&res=<int:resolution>&chr=<string:chr_id>&start=<int:start>&end=<int:end>
-```
-### Optional arguments:
-- limit_region
-  - Permitted values are:
-    - "all" (default): Any interactions
-    - "intra": Interactions only within the same chromosome
-    - "inter": Interactions only with other chromosomes
-- limit_chr
-  - Interactions with a specified chromosome
-
-```
-wget http://127.0.0.1:5002/api/adjacency/getInteractions?user_id=<string:user_id>&file_id=<string:file_id>&res=<int:resolution>&chr=<string:chr_id>&start=<int:start>&end=<int:end>&limit_region=intra
-wget http://127.0.0.1:5002/api/adjacency/getInteractions?user_id=<string:user_id>&file_id=<string:file_id>&res=<int:resolution>&chr=<string:chr_id>&start=<int:start>&end=<int:end>&limit_chr=<string:chrB_id>
-```
-
-### Interactions in TSV format
-By modifying the header to request `application/tsv` the following request:
-
-```
-wget -S -q --header "Accept: application/tsv" http://127.0.0.1:5002/api/adjacency/getInteractions?user_id=<string:user_id>&file_id=<string:file_id>&res=<int:resolution>&chr=<string:chr_id>&start=<int:start>&end=<int:end> -O test.out.tsv``
-
-```
-
-will return the interactions where columns represent:
-
-1. Chromosome 1
-2. Starting position for chromosome 1
-3. Chromosome 2
-4. Starting position for chromosome 2
-5. Value
-
-## Get individual value
-```
-wget http://127.0.0.1:5002/api/adjacency/getValue?user_id=<string:user_id>&file_id=<string:file_id>&res=<int:resolution>&pox_x=<int:pos_x>&pos_y=<int:pos_y>
-```
-
 # Testing
 Test scripts are located in the `test/` directory. Run `pytest` to from this directory to ensure that the API is working correctly.
 
