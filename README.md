@@ -42,7 +42,7 @@ pyenv virtualenv 2.7.12 mg-rest-adjacency
 pyenv activate mg-rest-service
 pip install git+https://github.com/Multiscale-Genomics/mg-dm-api.git
 pip install -e .
-pip deactivate
+pyenv deactivate
 ```
 Starting the service:
 ```
