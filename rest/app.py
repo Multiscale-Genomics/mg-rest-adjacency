@@ -17,25 +17,102 @@ limitations under the License.
 from flask import Flask, make_response, request
 from flask_restful import Api, Resource
 
-from hdf5_reader import hdf5
+from rest.hdf5_reader import hdf5
 
-app = Flask(__name__)
+APP = Flask(__name__)
 #app.config['DEBUG'] = False
 
-api = Api(app)
+REST_API = Api(APP)
 
-@api.representation('application/tsv')
+@REST_API.representation('application/tsv')
 def output_tsv(data, code, headers=None):
     """
     TSV representation for interactions
     """
     if request.endpoint == "values":
         outstr = ''
-        for v in data["values"]:
-            outstr += str(v["chrA"]) + "\t" + str(v["startA"]) + "\t" + str(v["chrB"]) + "\t" + str(v["startB"]) + "\t" + str(v["value"]) + "\n"
+        for value in data["values"]:
+            outstr += str(value["chrA"]) + "\t" + str(value["startA"]) + "\t"
+            outstr += str(value["chrB"]) + "\t" + str(value["startB"]) + "\t"
+            outstr += str(value["value"]) + "\n"
         resp = make_response(outstr, code)
         resp.headers.extend(headers or {})
         return resp
+
+
+def help_usage(error_message, status_code,
+               parameters_required, parameters_provided):
+    """
+    Usage Help
+    ----------
+
+    Description of the basic usage patterns for GET functions for the app, 
+    including any parameters that were provided byt he user along with the 
+    available parameters that are required/optional.
+
+    Parameters
+    ^^^^^^^^^^
+    error_message : str | None
+        Error message detailing what has gone wrong. If there are no errors then
+        None should be passed.
+    status_code : int
+        HTTP status code. A full list of codes can be found at the
+        `W3<https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html>`
+    parameters_required : list
+        List of the text names for each paramter required by the end point. An
+        empty list should be provided if there are no parameters required
+    parameters_provided : dict
+        Dictionary of the parameters and the matching values provided by the
+        user. An empyt dictionary should be passed if there were no parameters
+        provided by the user.
+
+    Returns
+    ^^^^^^^
+    str
+        JSON formated status message to display to the user
+    """
+    parameters = {
+        'user_id' : ['User ID', 'str', 'REQUIRED'],
+        'file_id' : ['File ID', 'str', 'REQUIRED'],
+        'chrom' : ['Chromosome', 'str', 'REQUIRED'],
+        'start' : ['Start', 'int', 'REQUIRED'],
+        'end' : ['End', 'int', 'REQUIRED'],
+        'res'     : ['Resolution', 'int', 'REQUIRED'],
+        'limit_chr' : [
+            'Limit interactions to interacting with a specific chromosome',
+            'str', 'OPTIONAL'],
+        'limit_start' : [
+            'Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_end are defined',
+            'int', 'OPTIONAL'],
+        'limit_end' : [
+            'Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_start are defined',
+            'int', 'OPTIONAL'],
+        'bin_i' : ['Position i', 'int', 'REQUIRED'],
+        'bin_j' : ['Position j', 'int', 'REQUIRED'],
+        'type' : ['add_meta|remove_meta', 'str', 'REQUIRED']
+    }
+
+    used_param = {k : parameters[k] for k in parameters_required if k in parameters}
+
+    usage = {
+        '_links' : {
+            '_self' : request.base_url,
+            '_parent' : request.url_root + 'mug/api/adjacency'
+        },
+        'parameters' : used_param
+    }
+    message = {
+        'usage' : usage,
+        'status_code' : status_code
+    }
+
+    if parameters_provided:
+        message['provided_parameters'] = parameters_provided
+
+    if error_message != None:
+        message['error'] = error_message
+
+    return message
 
 
 class GetEndPoints(Resource):
@@ -43,8 +120,21 @@ class GetEndPoints(Resource):
     Class to handle the http requests for returning information about the end
     points
     """
-    
+
     def get(self):
+        """
+        GET list all end points
+        -----------------------
+
+        List of all of the end points for the current service.
+
+        Example
+        ^^^^^^^
+        .. code-block::
+           :linenos:
+
+           curl -X GET http://localhost:5001/mug/api/adjacency
+        """
         return {
             '_links': {
                 '_self': request.base_url,
@@ -62,53 +152,59 @@ class GetDetails(Resource):
     Class to handle the http requests for the size of the chromosome, the
     number of bins and available resolutions
     """
-    
-    def usage(self, error_message, status_code, parameters = {}):
-        usage = {
-                    '_links' : {
-                        '_self' : request.base_url,
-                        '_parent': request.url_root + 'mug/api/adjacency'
-                    },
-                    'parameters' : {
-                        'user_id' : ['User ID', 'str', 'REQUIRED'],
-                        'file_id' : ['File ID', 'str', 'REQUIRED'],
-                    }
-                }
-        message = {
-                      'usage' : usage,
-                      'status_code' : status_code
-                  }
 
-        if len(parameters) > 0:
-            message['provided_parameters'] = parameters
-        
-        if error_message != None:
-            message['error'] = error_message
-
-        return message
-    
     def get(self):
+        """
+        GET List details from the file
+        ------------------------------
+
+        Call to list the available chromosomes and resolutions within a dataset
+
+        Parameters
+        ^^^^^^^^^^
+        user_id : str
+            User ID
+        file_id : str
+            Identifier of the file to retrieve data from
+
+        Returns
+        ^^^^^^^
+        dict
+            chromosomes : list
+                List of the available chromosomes and their length
+            resolutions : list
+                List of the resolutions for the dataset
+
+        Examples
+        ^^^^^^^^
+        .. code-block::
+           :linenos:
+
+           curl -X GET http://localhost:5001/mug/api/adjacency/details?user_id=test&file_id=test_file
+
+        """
         user_id = request.args.get('user_id')
         file_id = request.args.get('file_id')
-        
+
+        params_required = ['user_id', 'file_id']
         params = [user_id, file_id]
 
         # Display the parameters available
         if sum([x is None for x in params]) == len(params):
-            return self.usage(None, 200)
-        
+            return help_usage(None, 200, params_required, {})
+
         # ERROR - one of the required parameters is NoneType
         if sum([x is not None for x in params]) != len(params):
-            return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id}), 400
-        
+            return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id})
+
         request_path = request.path
         rp = request_path.split("/")
-        
+
         h5 = hdf5()
         x = h5.get_details(user_id, file_id)
         chr_param = x["chr_param"]
-        
-        
+
+
         return {
             '_links': {
                 '_self': request.base_url,
@@ -124,39 +220,92 @@ class GetInteractions(Resource):
     Class to handle the http requests for retrieving ranges of interactions from
     a given dataset
     """
-    
-    def usage(self, error_message, status_code, parameters = {}):
-        usage = {
-                    '_links' : {
-                        '_self' : request.base_url,
-                        '_parent': request.url_root + 'mug/api/adjacency'
-                    },
-                    'parameters' : {
-                        'user_id' : ['User ID', 'str', 'REQUIRED'],
-                        'file_id' : ['File ID', 'str', 'REQUIRED'],
-                        'chr'     : ['Chromosome ID', 'str', 'REQUIRED'],
-                        'start'   : ['Chromosome start position', 'int', 'REQUIRED'],
-                        'end'     : ['Chromosome end position', 'int', 'REQUIRED'],
-                        'res'     : ['Resolution', 'int', 'REQUIRED'],
-                        'limit_chr' : ['Limit interactions to interacting with a specific chromosome', 'str', 'OPTIONAL'],
-                        'limit_start' : ['Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_end are defined', 'int', 'OPTIONAL'],
-                        'limit_end' : ['Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_start are defined', 'int', 'OPTIONAL'],
-                    }
-                }
-        message = {
-                      'usage' : usage,
-                      'status_code' : status_code
-                  }
-        
-        if len(parameters) > 0:
-            message['provided_parameters'] = parameters
-        
-        if error_message != None:
-            message['error'] = error_message
 
-        return message
-    
     def get(self):
+        """
+        GET List details from the file
+        ------------------------------
+
+        Call to list the available chromosomes and resolutions within a dataset
+
+        Parameters
+        ^^^^^^^^^^
+        user_id : str
+            User ID
+        file_id : str
+            Identifier of the file to retrieve data from
+        chrom : str
+            Chromosome identifier (1, 2, 3, chr1, chr2, chr3, I, II, III, etc)
+            for the chromosome of interest
+        start : int
+            Start position for a selected region
+        end : int
+            End position for a selected region
+        res : int
+            Resolution of the dataset requested
+        limit_chr : str
+            Limit the interactions returned to those between chr and
+        limit_start : int
+            Start position for a specific interacting chromosomal region. This
+            is to be used in conjunction with the limit_chr parameter
+        limit_end : int
+            End position for a specific interacting chromosomal region This
+            is to be used in conjunction with the limit_chr parameter
+
+        Returns
+        ^^^^^^^
+        dict
+            chr : str
+                Chromosome ID
+            resolutions : list
+                List of the resolutions for the dataset
+            start : int
+                Start position for a selected region
+            end : int
+                End position for a selected region
+            res : int
+                Resolution of the dataset requested
+            limit_chr : str
+                Limit the interactions returned to those between chr and
+            limit_start : int
+                Start position for a specific interacting chromosomal region.
+                This is to be used in conjunction with the limit_chr parameter
+            limit_end : int
+                End position for a specific interacting chromosomal region This
+                is to be used in conjunction with the limit_chr parameter
+            values : list
+                List of values for each window of the region of a given
+                resolution
+            log : list
+                List of errors that have occurred
+
+        Examples
+        ^^^^^^^^
+        .. code-block::
+           :linenos:
+
+           curl -X GET http://localhost:5001/mug/api/adjacency/getInteractions?user_id=test&file_id=test_file&chr=<chr_id>&res=<res>
+
+        Output Format
+        ^^^^^^^^^^^^^
+        By default this is in JSON format. If the output is required in a tab
+        separated format then the following needs to be specified in the header
+        of the request:
+
+        .. code-block::
+           :linenos:
+
+           curl -X GET --header "Accept: application/tsv" http://localhost:5001/mug/api/adjacency/getInteractions?user_id=test&file_id=test_file&chr=<chr_id>&res=<res>
+
+        This will return the values from the JSON format in the following order
+
+        1. Chromosome 1
+        2. Starting position for chromosome 1
+        3. Chromosome 2
+        4. Starting position for chromosome 2
+        5. Value
+
+        """
         user_id = request.args.get('user_id')
         file_id = request.args.get('file_id')
         chr_id = request.args.get('chr')
@@ -166,50 +315,51 @@ class GetInteractions(Resource):
         limit_chr = request.args.get('limit_chr')
         limit_start = request.args.get('limit_start')
         limit_end = request.args.get('limit_end')
-        no_links   = request.args.get('no_links')
-        
+        no_links = request.args.get('no_links')
+
+        params_required = ['user_id', 'file_id', 'chr_id', 'start', 'end', 'res', 'limit_chr', 'limit_start', 'limit_end']
         params = [user_id, file_id, chr_id, start, end, resolution]
 
         # Display the parameters available
         if sum([x is None for x in params]) == len(params):
-            return self.usage(None, 200)
-        
+            return help_usage(None, 200, params_required, {})
+
         # ERROR - one of the required parameters is NoneType
         if sum([x is not None for x in params]) != len(params):
-            return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end}), 400
-        
+            return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end}), 400
+
         h5 = hdf5()
         details = h5.get_details(user_id, file_id)
-        
+
         # ERROR - the requested resolution is not available
         if resolution not in details["resolutions"]:
-            return self.usage('Resolution Not Available', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
-        
+            return help_usage('Resolution Not Available', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
+
         try:
             start = int(start)
             end = int(end)
             resolution = int(resolution)
         except Exception as e:
             # ERROR - one of the parameters is not of integer type
-            return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr})
-        
+            return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr})
+
         if limit_start is not None or limit_end is not None:
             if limit_chr is None:
-                return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
+                return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
             try:
                 limit_start = int(limit_start)
                 limit_end = int(limit_end)
             except Exception as e:
                 # ERROR - one of the parameters is not of integer type
-                return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
-        
+                return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
+
         request_path = request.path
         rp = request_path.split("/")
         value_url = request.url_root + 'mug/api/adjacency/getValue'
-        
+
         x = h5.get_range(user_id, file_id, resolution, chr_id, start, end, limit_chr, limit_start, limit_end, value_url, no_links)
         #app.logger.warn(x["log"])
-        
+
         return {
             '_links': {
                 '_self': request.url,
@@ -232,50 +382,68 @@ class GetValue(Resource):
     Class to handle the http requests for retrieving a single value from a given
     dataset
     """
-    
-    def usage(self, error_message, status_code, parameters = {}):
-        usage = {
-                    '_links' : {
-                        '_self' : request.base_url,
-                        '_parent': request.url_root + 'mug/api/adjacency'
-                    },
-                    'parameters' : {
-                        'user_id' : ['User ID', 'str', 'REQUIRED'],
-                        'file_id' : ['File ID', 'str', 'REQUIRED'],
-                        'res'     : ['Resolution', 'int', 'REQUIRED'],
-                        'bin_i'   : ['Position i', 'int', 'REQUIRED'],
-                        'bin_j'   : ['Position j', 'int', 'REQUIRED'],
-                    }
-                }
-        message = {
-                      'usage' : usage,
-                      'status_code' : status_code
-                  }
-        
-        if len(parameters) > 0:
-            message['provided_parameters'] = parameters
-        
-        if error_message != None:
-            message['error'] = error_message
 
-        return message
-    
     def get(self):
+        """
+        GET single value
+        ----------------
+
+        Call to get a single value for a spcific bin x bin location
+
+        Parameters
+        ^^^^^^^^^^
+        user_id : str
+            User ID
+        file_id : str
+            Identifier of the file to retrieve data from
+        pos_x : int
+            Location of the window on the first region of interest
+        pos_y : int
+            Location of the window on the second region of interest
+        res : int
+            Resolution of the dataset requested
+
+        Returns
+        ^^^^^^^
+        dict
+            chrA : str
+                Chromosome ID 1
+            chrB : str
+                Chromosome ID 2
+            resolution : int
+                Resolution of the bin of interest
+            pos_x : int
+                Location of the window on the first region of interest
+            pos_y : int
+                Location of the window on the second region of interest
+                is to be used in conjunction with the limit_chr parameter
+            values : list
+                List of values for each window of the region of a given
+                resolution
+
+        Examples
+        ^^^^^^^^
+        .. code-block::
+           :linenos:
+
+           curl -X GET http://localhost:5001/mug/api/adjacency/getValue?user_id=test&file_id=test_file&chr=<chr_id>&res=<res>
+        """
         user_id = request.args.get('user_id')
         file_id = request.args.get('file_id')
         resolution = request.args.get('res')
         bin_i = request.args.get('pos_x')
         bin_j = request.args.get('pos_y')
-        
+
+        params_required = ['user_id', 'file_id', 'res', 'bin_i', 'bin_j']
         params = [user_id, file_id, resolution, bin_i, bin_j]
 
         # Display the parameters available
         if sum([x is None for x in params]) == len(params):
-            return self.usage(None, 200)
-        
+            return help_usage(None, 200, params_required, {})
+
         # ERROR - one of the required parameters is NoneType
         if sum([x is not None for x in params]) != len(params):
-            return self.usage('MissingParameters', 400, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : bin_i, 'pos_y' : bin_j}), 400
+            return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : bin_i, 'pos_y' : bin_j}), 400
 
         try:
             bin_i = int(bin_i)
@@ -283,38 +451,51 @@ class GetValue(Resource):
             resolution = int(resolution)
         except Exception as e:
             # ERROR - one of the parameters is not of integer type
-            return self.usage('IncorrectParameterType', 400, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : bin_i, 'pos_y' : bin_j}), 400
-        
+            return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : bin_i, 'pos_y' : bin_j}), 400
+
         h5 = hdf5()
         meta_data = h5.get_details(user_id, file_id)
         value = h5.get_value(user_id, file_id, resolution, bin_i, bin_j)
-        
+
         chrA_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, bin_i)
         chrB_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, bin_j)
-        
+
         request_path = request.path
         rp = request_path.split("/")
-        
+
         return {
             '_links': {
-              '_self': request.url_root + 'mug/api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(bin_i) + "&pos_y=" + str(bin_j)
+                '_self': request.url_root + 'mug/api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(bin_i) + "&pos_y=" + str(bin_j)
             },
-            'genome': accession_id,
             'chrA': chrA_id,
             'chrB': chrB_id,
-            'dataset': dataset,
             'resolution': resolution,
-            'bin_i': bin_i,
-            'bin_j': bin_j,
+            'pos_x': bin_i,
+            'pos_y': bin_j,
             'value': int(value)
         }
 
-class ping(Resource):
+class Ping(Resource):
     """
     Class to handle the http requests to ping a service
     """
-    
+
     def get(self):
+        """
+        GET Status
+        ----------
+
+        List the current status of the service along with the relevant
+        information about the version.
+
+        Example
+        ^^^^^^^
+        .. code-block::
+           :linenos:
+
+           curl -X GET http://localhost:5001/mug/api/adjacency/ping
+
+        """
         from . import release
         res = {
             "status":  "ready",
@@ -330,46 +511,24 @@ class ping(Resource):
         }
         return res
 
-"""
-Define the URIs and their matching methods
-"""
+# Define the URIs and their matching methods
+
 #   List the available end points for this service
-api.add_resource(GetEndPoints, "/mug/api/adjacency", endpoint='adjacency_root')
+REST_API.add_resource(GetEndPoints, "/mug/api/adjacency", endpoint='adjacency_root')
 
 #   Show the size of the chromosome, the number of bins and available resolutions
-#   Parameters:
-#    - file_id - (string)
-#    - user_id - (string)
-api.add_resource(GetDetails, "/mug/api/adjacency/details", endpoint='meta_data')
+REST_API.add_resource(GetDetails, "/mug/api/adjacency/details", endpoint='meta_data')
 
 #   List the interactions for a given region
-#   Parameters:
-#    - chr     - chromosome (string)
-#    - res     - resolution (int)
-#    - start   - (int)
-#    - end     - (int)
-#    - file_id - (string)
-#    - user_id - (string)
-#   Parameters (optional):
-#    - limit_region - 
-#    - limit_chr    - Chromosome (string)
-api.add_resource(GetInteractions, "/mug/api/adjacency/getInteractions", endpoint='values')
+REST_API.add_resource(GetInteractions, "/mug/api/adjacency/getInteractions", endpoint='values')
 
 #   Get a specific edge value for an interaction
-#   Parameters:
-#    - res     - resolution (int)
-#    - pos_x   - (int)
-#    - pox_y   - (int)
-#    - file_id - (string)
-#    - user_id - (string)
-api.add_resource(GetValue, "/mug/api/adjacency/getValue", endpoint="value")
+REST_API.add_resource(GetValue, "/mug/api/adjacency/getValue", endpoint="value")
 
 #   Service ping
-api.add_resource(ping, "/mug/api/adjacency/ping", endpoint='adjacency-ping')
+REST_API.add_resource(Ping, "/mug/api/adjacency/ping", endpoint='adjacency-ping')
 
 
-"""
-Initialise the server
-"""
+# Initialise the server
 if __name__ == "__main__":
-    app.run()
+    APP.run()

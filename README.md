@@ -100,7 +100,7 @@ wget http://127.0.0.1:5002/api/adjacency/getValue?user_id=<string:user_id>&file_
 ```
 
 # Testing
-Test scripts are located in the `test/` directory. Run `py.test` to from this directory to ensure that the API is working correctly.
+Test scripts are located in the `test/` directory. Run `pytest` to from this directory to ensure that the API is working correctly.
 
 The scripts require a valid hdf5 file generated using the scripts from mg-storage-hdf5 and a matching datasets.json file located in the `rest/` directory
 
