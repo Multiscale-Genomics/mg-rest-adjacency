@@ -1,17 +1,17 @@
 """
-Copyright 2017 EMBL-European Bioinformatics Institute
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+.. Copyright 2017 EMBL-European Bioinformatics Institute
+   
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+   
+       http://www.apache.org/licenses/LICENSE-2.0
+   
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 """
 
 from flask import Flask, make_response, request
@@ -44,14 +44,13 @@ def help_usage(error_message, status_code,
                parameters_required, parameters_provided):
     """
     Usage Help
-    ----------
 
     Description of the basic usage patterns for GET functions for the app, 
     including any parameters that were provided byt he user along with the 
     available parameters that are required/optional.
 
     Parameters
-    ^^^^^^^^^^
+    ----------
     error_message : str | None
         Error message detailing what has gone wrong. If there are no errors then
         None should be passed.
@@ -67,7 +66,7 @@ def help_usage(error_message, status_code,
         provided by the user.
 
     Returns
-    ^^^^^^^
+    -------
     str
         JSON formated status message to display to the user
     """
@@ -124,13 +123,12 @@ class GetEndPoints(Resource):
     def get(self):
         """
         GET list all end points
-        -----------------------
 
         List of all of the end points for the current service.
 
         Example
-        ^^^^^^^
-        .. code-block::
+        -------
+        .. code-block:: none
            :linenos:
 
            curl -X GET http://localhost:5001/mug/api/adjacency
@@ -156,19 +154,18 @@ class GetDetails(Resource):
     def get(self):
         """
         GET List details from the file
-        ------------------------------
 
         Call to list the available chromosomes and resolutions within a dataset
 
         Parameters
-        ^^^^^^^^^^
+        ----------
         user_id : str
             User ID
         file_id : str
             Identifier of the file to retrieve data from
 
         Returns
-        ^^^^^^^
+        -------
         dict
             chromosomes : list
                 List of the available chromosomes and their length
@@ -176,8 +173,8 @@ class GetDetails(Resource):
                 List of the resolutions for the dataset
 
         Examples
-        ^^^^^^^^
-        .. code-block::
+        --------
+        .. code-block:: none
            :linenos:
 
            curl -X GET http://localhost:5001/mug/api/adjacency/details?user_id=test&file_id=test_file
@@ -224,12 +221,11 @@ class GetInteractions(Resource):
     def get(self):
         """
         GET List details from the file
-        ------------------------------
 
         Call to list the available chromosomes and resolutions within a dataset
 
         Parameters
-        ^^^^^^^^^^
+        ----------
         user_id : str
             User ID
         file_id : str
@@ -253,7 +249,7 @@ class GetInteractions(Resource):
             is to be used in conjunction with the limit_chr parameter
 
         Returns
-        ^^^^^^^
+        -------
         dict
             chr : str
                 Chromosome ID
@@ -280,22 +276,23 @@ class GetInteractions(Resource):
                 List of errors that have occurred
 
         Examples
-        ^^^^^^^^
-        .. code-block::
+        --------
+        .. code-block:: none
            :linenos:
 
            curl -X GET http://localhost:5001/mug/api/adjacency/getInteractions?user_id=test&file_id=test_file&chr=<chr_id>&res=<res>
 
-        Output Format
-        ^^^^^^^^^^^^^
+        Notes
+        -----
         By default this is in JSON format. If the output is required in a tab
         separated format then the following needs to be specified in the header
         of the request:
 
-        .. code-block::
+        .. code-block:: none
            :linenos:
 
            curl -X GET --header "Accept: application/tsv" http://localhost:5001/mug/api/adjacency/getInteractions?user_id=test&file_id=test_file&chr=<chr_id>&res=<res>
+
 
         This will return the values from the JSON format in the following order
 
@@ -386,12 +383,11 @@ class GetValue(Resource):
     def get(self):
         """
         GET single value
-        ----------------
 
         Call to get a single value for a spcific bin x bin location
 
         Parameters
-        ^^^^^^^^^^
+        ----------
         user_id : str
             User ID
         file_id : str
@@ -404,7 +400,7 @@ class GetValue(Resource):
             Resolution of the dataset requested
 
         Returns
-        ^^^^^^^
+        -------
         dict
             chrA : str
                 Chromosome ID 1
@@ -422,8 +418,8 @@ class GetValue(Resource):
                 resolution
 
         Examples
-        ^^^^^^^^
-        .. code-block::
+        --------
+        .. code-block:: none
            :linenos:
 
            curl -X GET http://localhost:5001/mug/api/adjacency/getValue?user_id=test&file_id=test_file&chr=<chr_id>&res=<res>
@@ -483,14 +479,13 @@ class Ping(Resource):
     def get(self):
         """
         GET Status
-        ----------
 
         List the current status of the service along with the relevant
         information about the version.
 
-        Example
-        ^^^^^^^
-        .. code-block::
+        Examples
+        --------
+        .. code-block:: none
            :linenos:
 
            curl -X GET http://localhost:5001/mug/api/adjacency/ping
