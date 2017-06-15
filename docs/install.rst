@@ -47,6 +47,7 @@ Using pip:
 
 Setting up a server
 ^^^^^^^^^^^^^^^^^^^
+
 .. code-block:: none
    :linenos:
    
@@ -60,6 +61,7 @@ Setting up a server
    pyenv deactivate
 
 Starting the service:
+
 .. code-block:: none
    :linenos:
 

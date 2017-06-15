@@ -13,6 +13,7 @@ Welcome to mg-rest-adjacency's documentation!
    install
    app
    adr
+   license
 
 
 
