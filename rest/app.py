@@ -86,8 +86,8 @@ def help_usage(error_message, status_code,
         'limit_end' : [
             'Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_start are defined',
             'int', 'OPTIONAL'],
-        'bin_i' : ['Position i', 'int', 'REQUIRED'],
-        'bin_j' : ['Position j', 'int', 'REQUIRED'],
+        'pos_x' : ['Position i', 'int', 'REQUIRED'],
+        'pos_y' : ['Position j', 'int', 'REQUIRED'],
         'type' : ['add_meta|remove_meta', 'str', 'REQUIRED']
     }
 
@@ -427,11 +427,11 @@ class GetValue(Resource):
         user_id = request.args.get('user_id')
         file_id = request.args.get('file_id')
         resolution = request.args.get('res')
-        bin_i = request.args.get('pos_x')
-        bin_j = request.args.get('pos_y')
+        pos_x = request.args.get('pos_x')
+        pos_y = request.args.get('pos_y')
 
-        params_required = ['user_id', 'file_id', 'res', 'bin_i', 'bin_j']
-        params = [user_id, file_id, resolution, bin_i, bin_j]
+        params_required = ['user_id', 'file_id', 'res', 'pos_x', 'pos_y']
+        params = [user_id, file_id, resolution, pos_x, pos_y]
 
         # Display the parameters available
         if sum([x is None for x in params]) == len(params):
@@ -439,35 +439,35 @@ class GetValue(Resource):
 
         # ERROR - one of the required parameters is NoneType
         if sum([x is not None for x in params]) != len(params):
-            return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : bin_i, 'pos_y' : bin_j}), 400
+            return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y}), 400
 
         try:
-            bin_i = int(bin_i)
-            bin_j = int(bin_j)
+            pos_x = int(pos_x)
+            pos_y = int(pos_y)
             resolution = int(resolution)
         except Exception as e:
             # ERROR - one of the parameters is not of integer type
-            return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : bin_i, 'pos_y' : bin_j}), 400
+            return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y}), 400
 
         h5 = hdf5()
         meta_data = h5.get_details(user_id, file_id)
-        value = h5.get_value(user_id, file_id, resolution, bin_i, bin_j)
+        value = h5.get_value(user_id, file_id, resolution, pos_x, pos_y)
 
-        chrA_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, bin_i)
-        chrB_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, bin_j)
+        chrA_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, pos_x)
+        chrB_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, pos_y)
 
         request_path = request.path
         rp = request_path.split("/")
 
         return {
             '_links': {
-                '_self': request.url_root + 'mug/api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(bin_i) + "&pos_y=" + str(bin_j)
+                '_self': request.url_root + 'mug/api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(pos_x) + "&pos_y=" + str(pos_y)
             },
             'chrA': chrA_id,
             'chrB': chrB_id,
             'resolution': resolution,
-            'pos_x': bin_i,
-            'pos_y': bin_j,
+            'pos_x': pos_x,
+            'pos_y': pos_y,
             'value': int(value)
         }
 
