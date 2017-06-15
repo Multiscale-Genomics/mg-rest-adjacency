@@ -81,6 +81,7 @@ class hdf5:
         dset = f[str(resolution)]
         
         startB = 0
+        endB = 0
         if limit_chr != None:
             if limit_start != None and limit_end != None:
                 startB = int(np.floor(float(limit_start)/float(resolution)))
@@ -180,6 +181,7 @@ class hdf5:
         for chr_id in chr_param.keys():
             if chr_id == "meta":
                 continue
+            #print chr_param[chr_id]["bins"], type(chr_param[chr_id]["bins"])
             chr_end = chr_param[chr_id]["bins"][int(resolution)][2]
             chr_start = chr_param[chr_id]["bins"][int(resolution)][1]
             if index >= chr_start and index <= chr_end:
