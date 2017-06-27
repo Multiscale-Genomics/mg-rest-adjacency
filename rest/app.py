@@ -45,8 +45,8 @@ def help_usage(error_message, status_code,
     """
     Usage Help
 
-    Description of the basic usage patterns for GET functions for the app, 
-    including any parameters that were provided byt he user along with the 
+    Description of the basic usage patterns for GET functions for the app,
+    including any parameters that were provided byt he user along with the
     available parameters that are required/optional.
 
     Parameters
@@ -197,8 +197,9 @@ class GetDetails(Resource):
         request_path = request.path
         rp = request_path.split("/")
 
-        h5 = hdf5()
-        x = h5.get_details(user_id, file_id)
+        h5 = hdf5(user_id, file_id)
+        x = h5.get_details()
+        h5.close()
         chr_param = x["chr_param"]
 
 
@@ -325,8 +326,8 @@ class GetInteractions(Resource):
         if sum([x is not None for x in params]) != len(params):
             return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end}), 400
 
-        h5 = hdf5()
-        details = h5.get_details(user_id, file_id)
+        h5 = hdf5(user_id, file_id)
+        details = h5.get_details()
 
         # ERROR - the requested resolution is not available
         if resolution not in details["resolutions"]:
@@ -354,7 +355,8 @@ class GetInteractions(Resource):
         rp = request_path.split("/")
         value_url = request.url_root + 'mug/api/adjacency/getValue'
 
-        x = h5.get_range(user_id, file_id, resolution, chr_id, start, end, limit_chr, limit_start, limit_end, value_url, no_links)
+        x = h5.get_range(resolution, chr_id, start, end, limit_chr, limit_start, limit_end, value_url, no_links)
+        h5.close()
         #app.logger.warn(x["log"])
 
         return {
@@ -445,16 +447,18 @@ class GetValue(Resource):
             pos_x = int(pos_x)
             pos_y = int(pos_y)
             resolution = int(resolution)
-        except Exception as e:
+        except ValueError as e:
             # ERROR - one of the parameters is not of integer type
             return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y}), 400
 
-        h5 = hdf5()
-        meta_data = h5.get_details(user_id, file_id)
-        value = h5.get_value(user_id, file_id, resolution, pos_x, pos_y)
+        h5 = hdf5(user_id, file_id)
+        meta_data = h5.get_details()
+        value = h5.get_value(resolution, pos_x, pos_y)
 
         chrA_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, pos_x)
         chrB_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, pos_y)
+
+        h5.close()
 
         request_path = request.path
         rp = request_path.split("/")
@@ -476,7 +480,8 @@ class Ping(Resource):
     Class to handle the http requests to ping a service
     """
 
-    def get(self):
+    @staticmethod
+    def get():
         """
         GET Status
 
