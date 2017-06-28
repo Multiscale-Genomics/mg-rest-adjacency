@@ -54,6 +54,10 @@ class hdf5:
             file_obj = dm_handle.get_file_by_id(user_id, file_id)
             self.hdf5_handle = h5py.File(file_obj["file_path"], "r")
 
+        resolutions = map(int, self.hdf5_handle.keys())
+        dset = self.hdf5_handle[str(resolutions[0])]
+        self.chr_param = self._calculate_chr_param(resolutions, dset.attrs["chromosomes"])
+
     def close(self):
         """
         """
@@ -66,11 +70,11 @@ class hdf5:
 
         resolutions = self.hdf5_handle.keys()
         dset = self.hdf5_handle[str(resolutions[0])]
-        chr_param = self._calculate_chr_param(resolutions, dset.attrs["chromosomes"])
+        #chr_param = self._calculate_chr_param(resolutions, dset.attrs["chromosomes"])
 
         return {
             "chromosomes" : [list(c) for c in dset.attrs["chromosomes"]],
-            "chr_param"   : chr_param,
+            "chr_param"   : self.chr_param,
             "resolutions" : resolutions}
 
 
@@ -87,13 +91,8 @@ class hdf5:
         x = int(np.floor(float(start)/float(resolution)))
         y = int(np.ceil(float(end)/float(resolution)))
 
-        # Get meta data from HDF5 file
-        resolutions = map(int, self.hdf5_handle.keys())
-        dset = self.hdf5_handle[str(resolutions[0])]
-        chr_param = self._calculate_chr_param(resolutions, dset.attrs["chromosomes"])
-
         # xy_offset for the chromosome in the super array
-        xy_offset = chr_param[chr_id]["bins"][resolution][1]
+        xy_offset = self.chr_param[chr_id]["bins"][resolution][1]
 
         dset = self.hdf5_handle[str(resolution)]
 
@@ -103,12 +102,12 @@ class hdf5:
             if limit_start != None and limit_end != None:
                 startB = int(np.floor(float(limit_start)/float(resolution)))
                 endB = int(np.ceil(float(limit_end)/float(resolution)))
-                xyB_offset = chr_param[limit_chr]["bins"][resolution][1]
+                xyB_offset = self.chr_param[limit_chr]["bins"][resolution][1]
 
                 result = dset[(x+xy_offset):(y+xy_offset),(startB+xyB_offset):(endB+xyB_offset)]
             else:
-                startB = chr_param[limit_chr]["bins"][resolution][1]
-                endB = startB + chr_param[limit_chr]["bins"][resolution][0]
+                startB = self.chr_param[limit_chr]["bins"][resolution][1]
+                endB = startB + self.chr_param[limit_chr]["bins"][resolution][0]
 
                 result = dset[(x+xy_offset):(y+xy_offset),startB:endB]
         else:
@@ -139,24 +138,26 @@ class hdf5:
                     "endB" : endB,
                     "limit_chr" : limit_chr
                 },
-                'chr_param': chr_param
+                'chr_param': self.chr_param
             }
         )
 
         for i in r_index:
             x_start = ((i[0]+x)*int(resolution))
-            y_chr = self.get_chromosome_from_array_index(chr_param, int(resolution), i[1]+startB)
+            y_chr = self.get_chromosome_from_array_index(int(resolution), i[1]+startB)
             if limit_chr != None:
                 y_start = (i[1]+startB)*int(resolution)
             else:
-                y_start = (i[1]-chr_param[y_chr]["bins"][resolution][1])*int(resolution)
+                y_start = (i[1]-self.chr_param[y_chr]["bins"][resolution][1])*int(resolution)
 
             r = {
                 "chrA" : chr_id,
                 "startA" : x_start,
                 "chrB" : y_chr,
                 "startB" : y_start,
-                "value": int(result[i[0], i[1]])
+                "value" : int(result[i[0], i[1]]),
+                "pos_x" : i[0]+x+xy_offset,
+                "pos_y" : i[1]
             }
             if no_links is None:
                 r['_links'] = {'self': value_url + "?user_id=" + str(self.user_id) + "&file_id=" + str(self.file_id) + "&res=" + str(resolution) + "&pos_x=" + str(i[0]+x+xy_offset) + "&pos_y=" + str(i[1])}
@@ -212,16 +213,16 @@ class hdf5:
         return chr_param
 
 
-    def get_chromosome_from_array_index(self, chr_param, resolution, index):
+    def get_chromosome_from_array_index(self, resolution, index):
         """
         Identify the chromosome based on either the x or y coordinate in the
         array.
         """
-        for chr_id in chr_param.keys():
+        for chr_id in self.chr_param.keys():
             if chr_id == "meta":
                 continue
-            #print chr_param[chr_id]["bins"], type(chr_param[chr_id]["bins"])
-            chr_end = chr_param[chr_id]["bins"][int(resolution)][2]
-            chr_start = chr_param[chr_id]["bins"][int(resolution)][1]
+            #print(self.chr_param[chr_id]["bins"], type(self.chr_param[chr_id]["bins"]))
+            chr_end = self.chr_param[chr_id]["bins"][int(resolution)][2]
+            chr_start = self.chr_param[chr_id]["bins"][int(resolution)][1]
             if index >= chr_start and index <= chr_end:
                 return chr_id

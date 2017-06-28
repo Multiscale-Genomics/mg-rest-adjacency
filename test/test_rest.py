@@ -101,7 +101,7 @@ def test_getinteractions_00(client):
     Test that interactions returns a values block when test parameters are
     provided
     """
-    rest_value = client.get('/mug/api/adjacency/getInteractions?user_id=test&file_id=test&chr=19&res=1000000&start=1000000&end=5000000')
+    rest_value = client.get('/mug/api/adjacency/getInteractions?user_id=test&file_id=test&chr=chr1&res=10000&start=100000&end=200000')
     details = json.loads(rest_value.data)
     print(details.keys())
     assert 'values' in details
@@ -111,10 +111,10 @@ def test_getinteractions_01(client):
     Test that interactions returns a known number of values when test parameters
     are provided
     """
-    rest_value = client.get('/mug/api/adjacency/getInteractions?user_id=test&file_id=test&chr=19&res=1000000&start=1000000&end=5000000')
+    rest_value = client.get('/mug/api/adjacency/getInteractions?user_id=test&file_id=test&chr=chr1&res=10000&start=100000&end=200000')
     details = json.loads(rest_value.data)
-    print(len(details['values']))
-    assert len(details['values']) == 11408
+    print(details['values'])
+    assert len(details['values']) > 0
 
 def test_getvalue(client):
     """
@@ -130,7 +130,14 @@ def test_getvalue_00(client):
     Test that values returns with a value element when test parameters are
     provided
     """
-    rest_value = client.get('/mug/api/adjacency/getValue?user_id=test&file_id=test&res=1000000&pos_x=0&pos_y=2673')
-    details = json.loads(rest_value.data)
-    print(details)
-    assert 'values' in details
+    rest_interactions = client.get('/mug/api/adjacency/getInteractions?user_id=test&file_id=test&chr=chr1&res=10000&start=100000&end=200000')
+    interaction_details = json.loads(rest_interactions.data)
+    print(interaction_details['values'][0])
+    pos_x = interaction_details['values'][0]['pos_x']
+    pos_y = interaction_details['values'][0]['pos_y']
+
+    rest_value = client.get('/mug/api/adjacency/getValue?user_id=test&file_id=test&res=10000&pos_x=' + str(pos_x) + '&pos_y=' + str(pos_y))
+    value_details = json.loads(rest_value.data)
+    print(value_details)
+    assert 'value' in value_details
+    assert value_details['value'] == 1

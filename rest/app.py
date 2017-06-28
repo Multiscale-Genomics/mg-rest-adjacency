@@ -453,10 +453,11 @@ class GetValue(Resource):
 
         h5 = hdf5(user_id, file_id)
         meta_data = h5.get_details()
+        #print("chr_param:", meta_data["chr_param"])
         value = h5.get_value(resolution, pos_x, pos_y)
 
-        chrA_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, pos_x)
-        chrB_id = h5.get_chromosome_from_array_index(meta_data["chr_param"], resolution, pos_y)
+        chrA_id = h5.get_chromosome_from_array_index(resolution, pos_x)
+        chrB_id = h5.get_chromosome_from_array_index(resolution, pos_y)
 
         h5.close()
 
