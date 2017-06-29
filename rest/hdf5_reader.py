@@ -27,14 +27,14 @@ class hdf5:
     HDF5 files. All required information should be passed to this class.
     """
 
-    def __init__(self, user_id, file_id, resolution = None):
+    def __init__(self, user_id, file_id, resolution=None):
         """
-        Initialise the module and 
-        
+        Initialise the module and generate sample data if required
+
         Parameters
         ----------
         user_id : str
-            Identifier to uniquely locate the users files. Can be set to 
+            Identifier to uniquely locate the users files. Can be set to
             "common" if the files can be shared between users
         file_id : str
             Location of the file in the file system
@@ -80,13 +80,14 @@ class hdf5:
 
     def close(self):
         """
+        Close the HDF5 data file handle
         """
         self.hdf5_handle.close()
 
     def get_resolutions(self):
         """
         List resolutions that models have been generated for
-        
+
         Returns
         -------
         list : str
@@ -171,7 +172,7 @@ class hdf5:
            value = r.get_chromosome_parameters()
 
         """
-        
+
         return self.chr_param
 
     def get_range(
@@ -226,54 +227,53 @@ class hdf5:
         """
 
         # Defines columns to get extracted from the array
-        x = int(np.floor(float(start)/float(self.resolution)))
-        y = int(np.ceil(float(end)/float(self.resolution)))
+        x_pos = int(np.floor(float(start)/float(self.resolution)))
+        y_pos = int(np.ceil(float(end)/float(self.resolution)))
 
         # xy_offset for the chromosome in the super array
         xy_offset = self.chr_param[chr_id]["bins"][self.resolution][1]
 
         dset = self.hdf5_handle[str(self.resolution)]
 
-        startB = 0
-        endB = 0
+        start2 = 0
+        end2 = 0
         if limit_chr != None:
             if limit_start != None and limit_end != None:
-                startB = int(np.floor(float(limit_start)/float(self.resolution)))
-                endB = int(np.ceil(float(limit_end)/float(self.resolution)))
-                xyB_offset = self.chr_param[limit_chr]["bins"][self.resolution][1]
+                start2 = int(np.floor(float(limit_start)/float(self.resolution)))
+                end2 = int(np.ceil(float(limit_end)/float(self.resolution)))
+                xy2_offset = self.chr_param[limit_chr]["bins"][self.resolution][1]
 
-                result = dset[(x+xy_offset):(y+xy_offset),(startB+xyB_offset):(endB+xyB_offset)]
+                result = dset[(x_pos+xy_offset):(y_pos+xy_offset), (start2+xy2_offset):(end2+xy2_offset)]
             else:
-                startB = self.chr_param[limit_chr]["bins"][self.resolution][1]
-                endB = startB + self.chr_param[limit_chr]["bins"][self.resolution][0]
+                start2 = self.chr_param[limit_chr]["bins"][self.resolution][1]
+                end2 = start2 + self.chr_param[limit_chr]["bins"][self.resolution][0]
 
-                result = dset[(x+xy_offset):(y+xy_offset),startB:endB]
+                result = dset[(x_pos+xy_offset):(y_pos+xy_offset), start2:end2]
         else:
-            result = dset[(x+xy_offset):(y+xy_offset),:]
+            result = dset[(x_pos+xy_offset):(y_pos+xy_offset), :]
 
         # Iterate through slice and extract results greater than zero
         results = []
-        rShape = result.shape
-        logText = []
+        log_text = []
 
         r_index = np.transpose(np.nonzero(result))
-        logText.append(
+        log_text.append(
             {
                 "coord" : {
-                    "x0" : (x+xy_offset),
-                    "x1" : (y+xy_offset)
+                    "x0" : (x_pos+xy_offset),
+                    "x1" : (y_pos+xy_offset)
                 },
                 "r_index" : len(r_index),
                 "param": {
                     "start" : start,
-                    "x" : x,
+                    "x" : x_pos,
                     "end" : end,
-                    "y" : y,
+                    "y" : y_pos,
                     "xy_offset" : xy_offset,
                     "resolution" : self.resolution,
                     "chr_id" : chr_id,
-                    "startB" : startB,
-                    "endB" : endB,
+                    "startB" : start2,
+                    "endB" : end2,
                     "limit_chr" : limit_chr
                 },
                 'chr_param': self.chr_param
@@ -281,27 +281,27 @@ class hdf5:
         )
 
         for i in r_index:
-            x_start = ((i[0]+x)*int(self.resolution))
-            y_chr = self.get_chromosome_from_array_index(i[1]+startB)
+            x_start = ((i[0]+x_pos)*int(self.resolution))
+            y_chr = self.get_chromosome_from_array_index(i[1]+start2)
             if limit_chr != None:
-                y_start = (i[1]+startB)*int(self.resolution)
+                y_start = (i[1]+start2)*int(self.resolution)
             else:
                 y_start = (i[1]-self.chr_param[y_chr]["bins"][self.resolution][1])*int(self.resolution)
 
-            r = {
+            entry = {
                 "chrA" : chr_id,
                 "startA" : x_start,
                 "chrB" : y_chr,
                 "startB" : y_start,
                 "value" : int(result[i[0], i[1]]),
-                "pos_x" : i[0]+x+xy_offset,
+                "pos_x" : i[0]+x_pos+xy_offset,
                 "pos_y" : i[1]
             }
             if no_links is None:
-                r['_links'] = {'self': value_url + "?user_id=" + str(self.user_id) + "&file_id=" + str(self.file_id) + "&res=" + str(self.resolution) + "&pos_x=" + str(i[0]+x+xy_offset) + "&pos_y=" + str(i[1])}
-            results.append(r)
+                entry['_links'] = {'self': value_url + "?user_id=" + str(self.user_id) + "&file_id=" + str(self.file_id) + "&res=" + str(self.resolution) + "&pos_x=" + str(i[0]+x_pos+xy_offset) + "&pos_y=" + str(i[1])}
+            results.append(entry)
 
-        return {"log": logText, "results": results}
+        return {"log": log_text, "results": results}
 
 
     def get_value(self, bin_i, bin_j):
@@ -322,7 +322,7 @@ class hdf5:
 
         Example
         -------
-        
+
         .. code-block:: python
            :linenos:
 
@@ -334,7 +334,7 @@ class hdf5:
         value = self.dset[int(bin_i), int(bin_j)]
         return value
 
-    def _calculate_chr_param(self, binSizes, chromosomes):
+    def _calculate_chr_param(self, bin_sizes, chromosomes):
         """
         Load the self.chr_param object with the required information about the
         start and stop positions of the chromosomes and bins.
@@ -342,31 +342,39 @@ class hdf5:
 
         chr_param = {}
 
-        genomeLen = 0
-        binCount = [0]*len(binSizes)
+        genome_len = 0
+        bin_count = [0]*len(bin_sizes)
         chromosome_count = len(chromosomes)
         for i in range(chromosome_count):
-            c = chromosomes[i]
+            chromosome = chromosomes[i]
 
-            genomeLen += int(c[1])
+            genome_len += int(chromosome[1])
 
             # Calculate the number of bins for a chromosome and then join with
             # the offset values for the start in the array
-            binS = [int(np.ceil(int(c[1])/float(y))) for y in binSizes]
-            binC = dict(
+            bin_s = [int(np.ceil(int(chromosome[1])/float(y))) for y in bin_sizes]
+            bin_c = dict(
                 zip(
-                    binSizes,
-                    [[binS[j], binCount[j], binS[j]+binCount[j]] for j in range(len(binCount))]
+                    bin_sizes,
+                    [[bin_s[j], bin_count[j], bin_s[j]+bin_count[j]] for j in range(len(bin_count))]
                 )
             )
 
-            chr_param[str(c[0])] = {'size': [int(c[1]), genomeLen], 'bins': binC}
+            chr_param[str(chromosome[0])] = {
+                'size': [int(chromosome[1]), genome_len],
+                'bins': bin_c
+            }
 
             # Calculate the new offset values.
-            binCount = [binCount[i]+binS[i] for i in range(len(binCount))]
+            bin_count = [bin_count[i]+bin_s[i] for i in range(len(bin_count))]
 
-        totalBinCount = dict(zip(binSizes, [[binS[i], binCount[i]]for i in range(len(binCount))]))
-        chr_param["meta"] = {"genomeSize": genomeLen, "totalBinCount": totalBinCount}
+        total_bin_count = dict(
+            zip(
+                bin_sizes,
+                [[bin_s[i], bin_count[i]] for i in range(len(bin_count))]
+            )
+        )
+        chr_param["meta"] = {"genomeSize": genome_len, "totalBinCount": total_bin_count}
 
         return chr_param
 
@@ -388,7 +396,7 @@ class hdf5:
 
         Example
         -------
-        
+
         .. code-block:: python
            :linenos:
 
