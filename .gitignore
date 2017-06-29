@@ -2,3 +2,7 @@
 *.json
 .python-version
 *.cnf
+.cache
+*egg-info
+.eggs
+docs/_build
