@@ -21,13 +21,13 @@ from __future__ import print_function
 #import json
 import pytest
 
-from rest.hdf5_reader import hdf5
+from reader.hdf5_adjacency import adjacency
 
 def test_range():
     """
     Test the range function
     """
-    hdf5_handle = hdf5('test', '', 10000)
+    hdf5_handle = adjacency('test', '', 10000)
     x = hdf5_handle.get_range('chr1', 100000, 200000, limit_chr='chr2')
     print(x)
     assert 'results' in x
