@@ -27,8 +27,8 @@ def test_range():
     """
     Test the range function
     """
-    hdf5_handle = hdf5('test', '')
-    x = hdf5_handle.get_range(10000, 'chr1', 100000, 200000, limit_chr='chr2')
-
+    hdf5_handle = hdf5('test', '', 10000)
+    x = hdf5_handle.get_range('chr1', 100000, 200000, limit_chr='chr2')
+    print(x)
     assert 'results' in x
     assert len(x['results']) > 0

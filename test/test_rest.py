@@ -103,7 +103,7 @@ def test_getinteractions_00(client):
     """
     rest_value = client.get('/mug/api/adjacency/getInteractions?user_id=test&file_id=test&chr=chr1&res=10000&start=100000&end=200000')
     details = json.loads(rest_value.data)
-    print(details.keys())
+    print('TEST - getinteractions_00:', details.keys())
     assert 'values' in details
 
 def test_getinteractions_01(client):
@@ -113,8 +113,9 @@ def test_getinteractions_01(client):
     """
     rest_value = client.get('/mug/api/adjacency/getInteractions?user_id=test&file_id=test&chr=chr1&res=10000&start=100000&end=200000')
     details = json.loads(rest_value.data)
-    print(details['values'])
-    assert len(details['values']) > 0
+    print('TEST - getinteractions_01:', details.keys())
+    value_count = len(details['values'])
+    assert value_count > 0
 
 def test_getvalue(client):
     """

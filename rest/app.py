@@ -326,20 +326,21 @@ class GetInteractions(Resource):
         if sum([x is not None for x in params]) != len(params):
             return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end}), 400
 
-        h5 = hdf5(user_id, file_id)
-        details = h5.get_details()
-
-        # ERROR - the requested resolution is not available
-        if resolution not in details["resolutions"]:
-            return help_usage('Resolution Not Available', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
-
         try:
             start = int(start)
             end = int(end)
             resolution = int(resolution)
-        except Exception as e:
+        except ValueError as e:
             # ERROR - one of the parameters is not of integer type
             return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr})
+
+        h5 = hdf5(user_id, file_id, resolution)
+        details = h5.get_details()
+        #print("Details:", details)
+
+        # ERROR - the requested resolution is not available
+        if resolution not in details["resolutions"]:
+            return help_usage('Resolution Not Available', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
 
         if limit_start is not None or limit_end is not None:
             if limit_chr is None:
@@ -347,7 +348,7 @@ class GetInteractions(Resource):
             try:
                 limit_start = int(limit_start)
                 limit_end = int(limit_end)
-            except Exception as e:
+            except ValueError as e:
                 # ERROR - one of the parameters is not of integer type
                 return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
 
@@ -355,7 +356,7 @@ class GetInteractions(Resource):
         rp = request_path.split("/")
         value_url = request.url_root + 'mug/api/adjacency/getValue'
 
-        x = h5.get_range(resolution, chr_id, start, end, limit_chr, limit_start, limit_end, value_url, no_links)
+        x = h5.get_range(chr_id, start, end, limit_chr, limit_start, limit_end, value_url, no_links)
         h5.close()
         #app.logger.warn(x["log"])
 
@@ -451,13 +452,13 @@ class GetValue(Resource):
             # ERROR - one of the parameters is not of integer type
             return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y}), 400
 
-        h5 = hdf5(user_id, file_id)
+        h5 = hdf5(user_id, file_id, resolution)
         meta_data = h5.get_details()
         #print("chr_param:", meta_data["chr_param"])
-        value = h5.get_value(resolution, pos_x, pos_y)
+        value = h5.get_value(pos_x, pos_y)
 
-        chrA_id = h5.get_chromosome_from_array_index(resolution, pos_x)
-        chrB_id = h5.get_chromosome_from_array_index(resolution, pos_y)
+        chrA_id = h5.get_chromosome_from_array_index(pos_x)
+        chrB_id = h5.get_chromosome_from_array_index(pos_y)
 
         h5.close()
 

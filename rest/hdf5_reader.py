@@ -27,8 +27,21 @@ class hdf5:
     HDF5 files. All required information should be passed to this class.
     """
 
-    def __init__(self, user_id, file_id):
+    def __init__(self, user_id, file_id, resolution = None):
         """
+        Initialise the module and 
+        
+        Parameters
+        ----------
+        user_id : str
+            Identifier to uniquely locate the users files. Can be set to 
+            "common" if the files can be shared between users
+        file_id : str
+            Location of the file in the file system
+        resolution : int (Optional)
+            Level of resolution. This is optional, but only the functions
+            get_resolutions() and set_resolutions() can be called. Once the
+            resolution has been set then all functions are callable.
         """
         self.user_id = user_id
         self.file_id = file_id
@@ -54,60 +67,185 @@ class hdf5:
             file_obj = dm_handle.get_file_by_id(user_id, file_id)
             self.hdf5_handle = h5py.File(file_obj["file_path"], "r")
 
-        resolutions = map(int, self.hdf5_handle.keys())
-        dset = self.hdf5_handle[str(resolutions[0])]
-        self.chr_param = self._calculate_chr_param(resolutions, dset.attrs["chromosomes"])
+        self.resolutions = map(int, self.hdf5_handle.keys())
+
+        if resolution is None:
+            self.dset = self.hdf5_handle[str(self.resolutions[0])]
+            self.resolution = self.resolutions[0]
+        else:
+            self.dset = self.hdf5_handle[str(resolution)]
+            self.resolution = resolution
+
+        self.chr_param = self._calculate_chr_param(self.resolutions, self.dset.attrs["chromosomes"])
 
     def close(self):
         """
         """
         self.hdf5_handle.close()
 
+    def get_resolutions(self):
+        """
+        List resolutions that models have been generated for
+        
+        Returns
+        -------
+        list : str
+            Available levels of resolution that can be set
+        """
+
+        return [res for res in self.hdf5_handle]
+
+
+    def set_resolution(self, resolution):
+        """
+        Set, or change, the resolution level
+
+        Parameters
+        ----------
+        resolution : int
+            Level of resolution
+        """
+
+        self.resolution = resolution
+
+        self.dset = self.hdf5_handle[str(self.resolution)]
+        chromosomes = self.dset.attrs['chromosomes']
+        self.chr_param = self._calculate_chr_param(self.resolution, chromosomes)
+
     def get_details(self):
         """
         Return a list of the available resolutions in a given HDF5 file
         """
 
-        resolutions = self.hdf5_handle.keys()
-        dset = self.hdf5_handle[str(resolutions[0])]
-        #chr_param = self._calculate_chr_param(resolutions, dset.attrs["chromosomes"])
-
         return {
-            "chromosomes" : [list(c) for c in dset.attrs["chromosomes"]],
+            "chromosomes" : [list(c) for c in self.dset.attrs["chromosomes"]],
             "chr_param"   : self.chr_param,
-            "resolutions" : resolutions}
+            "resolutions" : self.resolutions}
 
+    def get_resolution(self):
+        """
+        List the current level of rseolution
+
+        Returns
+        -------
+        resolution : int
+            Current level of resolution
+        """
+
+        return self.resolution
+
+    def get_chromosomes(self):
+        """
+        List of chromosomes that have models at a given resolution
+
+        Returns
+        -------
+        chromosomes : list
+            List of chromosomes at the set resolution
+        """
+
+        if self.resolution is None:
+            return {}
+
+        return [list(c) for c in self.dset.attrs['chromosomes']]
+
+    def get_chromosome_parameters(self):
+        """
+        Return a list of the available resolutions in a given HDF5 file
+
+        Returns
+        -------
+        dict
+           chromosomes : list
+           chr_param : dict
+           resolitions
+
+        Example
+        -------
+
+        .. code-block:: python
+           :linenos:
+
+           from reader import adjacency
+           r = adjacency('test', '', 10000)
+           value = r.get_chromosome_parameters()
+
+        """
+        
+        return self.chr_param
 
     def get_range(
-            self, resolution, chr_id, start, end,
+            self, chr_id, start, end,
             limit_chr=None, limit_start=None, limit_end=None,
             value_url='/api/getValue', no_links=None):
         """
         Get the interactions that happen within a defined region on a specific
-        chromosome. Returns inter and intra interactions with the defined region.
+        chromosome. Returns inter and intra interactions with the defined
+        region.
+
+        Parameters
+        ----------
+        chr_id : str
+           Chromosomal name
+        start : int
+           Start position within the chromosome
+        end : int
+           End position within the chromosome
+        limit_chr : str (Optional)
+           Limit the results to a particular chromosome
+        limit_start : int (Optional)
+           Limit the range start position on the limit_chr paramter
+        limit_end : int (Optional)
+           Limit the range end position on the limit_chr parameter
+        value_url : str (Optional)
+           Define a custom URL snippet for the location of the file if different
+           from the defaul
+        no_links : bool (Optional)
+           Will return the URL links to the individual points within the
+           adjacency matrix. In cases where this generates a large number of
+           points it is possible to turn off generating these links. Set this
+           value to 1.
+
+        Returns
+        -------
+        dict
+           log : list
+              List of messages about the state for debugging
+           results : list
+              List of values for given positions within the adjacency matrix
+
+        Example
+        -------
+
+        .. code-block:: python
+           :linenos:
+
+           from reader import adjacency
+           r = adjacency('test', '', 10000)
+           value = r.get_range(2000000, 1000000)
         """
 
         # Defines columns to get extracted from the array
-        x = int(np.floor(float(start)/float(resolution)))
-        y = int(np.ceil(float(end)/float(resolution)))
+        x = int(np.floor(float(start)/float(self.resolution)))
+        y = int(np.ceil(float(end)/float(self.resolution)))
 
         # xy_offset for the chromosome in the super array
-        xy_offset = self.chr_param[chr_id]["bins"][resolution][1]
+        xy_offset = self.chr_param[chr_id]["bins"][self.resolution][1]
 
-        dset = self.hdf5_handle[str(resolution)]
+        dset = self.hdf5_handle[str(self.resolution)]
 
         startB = 0
         endB = 0
         if limit_chr != None:
             if limit_start != None and limit_end != None:
-                startB = int(np.floor(float(limit_start)/float(resolution)))
-                endB = int(np.ceil(float(limit_end)/float(resolution)))
-                xyB_offset = self.chr_param[limit_chr]["bins"][resolution][1]
+                startB = int(np.floor(float(limit_start)/float(self.resolution)))
+                endB = int(np.ceil(float(limit_end)/float(self.resolution)))
+                xyB_offset = self.chr_param[limit_chr]["bins"][self.resolution][1]
 
                 result = dset[(x+xy_offset):(y+xy_offset),(startB+xyB_offset):(endB+xyB_offset)]
             else:
-                startB = self.chr_param[limit_chr]["bins"][resolution][1]
-                endB = startB + self.chr_param[limit_chr]["bins"][resolution][0]
+                startB = self.chr_param[limit_chr]["bins"][self.resolution][1]
+                endB = startB + self.chr_param[limit_chr]["bins"][self.resolution][0]
 
                 result = dset[(x+xy_offset):(y+xy_offset),startB:endB]
         else:
@@ -132,7 +270,7 @@ class hdf5:
                     "end" : end,
                     "y" : y,
                     "xy_offset" : xy_offset,
-                    "resolution" : resolution,
+                    "resolution" : self.resolution,
                     "chr_id" : chr_id,
                     "startB" : startB,
                     "endB" : endB,
@@ -143,12 +281,12 @@ class hdf5:
         )
 
         for i in r_index:
-            x_start = ((i[0]+x)*int(resolution))
-            y_chr = self.get_chromosome_from_array_index(int(resolution), i[1]+startB)
+            x_start = ((i[0]+x)*int(self.resolution))
+            y_chr = self.get_chromosome_from_array_index(i[1]+startB)
             if limit_chr != None:
-                y_start = (i[1]+startB)*int(resolution)
+                y_start = (i[1]+startB)*int(self.resolution)
             else:
-                y_start = (i[1]-self.chr_param[y_chr]["bins"][resolution][1])*int(resolution)
+                y_start = (i[1]-self.chr_param[y_chr]["bins"][self.resolution][1])*int(self.resolution)
 
             r = {
                 "chrA" : chr_id,
@@ -160,20 +298,40 @@ class hdf5:
                 "pos_y" : i[1]
             }
             if no_links is None:
-                r['_links'] = {'self': value_url + "?user_id=" + str(self.user_id) + "&file_id=" + str(self.file_id) + "&res=" + str(resolution) + "&pos_x=" + str(i[0]+x+xy_offset) + "&pos_y=" + str(i[1])}
+                r['_links'] = {'self': value_url + "?user_id=" + str(self.user_id) + "&file_id=" + str(self.file_id) + "&res=" + str(self.resolution) + "&pos_x=" + str(i[0]+x+xy_offset) + "&pos_y=" + str(i[1])}
             results.append(r)
 
         return {"log": logText, "results": results}
 
 
-    def get_value(self, resolution, bin_i, bin_j):
+    def get_value(self, bin_i, bin_j):
         """
-        Get a specific value for a given dataset, resoltuoin
+        Get a specific value for a given dataset, resolution
+
+        Parameters
+        ----------
+        bin_i : int
+            Array position in the first dimension
+        bin_j : int
+            Array position in the second dimension
+
+        Returns
+        -------
+        value : int
+            Value for a given cell in the adjacency array
+
+        Example
+        -------
+        
+        .. code-block:: python
+           :linenos:
+
+           from reader import adjacency
+           r = adjacency('test', '', 10000)
+           value = r.get_value(2000000, 1000000)
+
         """
-        dset = self.hdf5_handle[str(resolution)]
-
-        value = dset[int(bin_i), int(bin_j)]
-
+        value = self.dset[int(bin_i), int(bin_j)]
         return value
 
     def _calculate_chr_param(self, binSizes, chromosomes):
@@ -213,16 +371,37 @@ class hdf5:
         return chr_param
 
 
-    def get_chromosome_from_array_index(self, resolution, index):
+    def get_chromosome_from_array_index(self, index):
         """
         Identify the chromosome based on either the x or y coordinate in the
         array.
+
+        Parameters
+        ----------
+        index : int
+            Location within the array
+
+        Returns
+        -------
+        chr_id : str
+            Identity of the chromosome
+
+        Example
+        -------
+        
+        .. code-block:: python
+           :linenos:
+
+           from reader import adjacency
+           r = adjacency('test', '', 10000)
+           cid = r.get_chromosome_from_array_index(1234567890)
+
         """
         for chr_id in self.chr_param.keys():
             if chr_id == "meta":
                 continue
             #print(self.chr_param[chr_id]["bins"], type(self.chr_param[chr_id]["bins"]))
-            chr_end = self.chr_param[chr_id]["bins"][int(resolution)][2]
-            chr_start = self.chr_param[chr_id]["bins"][int(resolution)][1]
+            chr_end = self.chr_param[chr_id]["bins"][int(self.resolution)][2]
+            chr_start = self.chr_param[chr_id]["bins"][int(self.resolution)][1]
             if index >= chr_start and index <= chr_end:
                 return chr_id
