@@ -1,6 +1,6 @@
 # mg-rest-adjacency
 
-[![Documentation Status](https://readthedocs.org/projects/mg-rest-adjacency/badge/?version=latest)](http://mg-rest-adjacency.readthedocs.org/en/latest/)
+[![Documentation Status](https://readthedocs.org/projects/mg-rest-adjacency/badge/?version=latest)](http://mg-rest-adjacency.readthedocs.org/en/latest/) [![Build Status](https://travis-ci.org/Multiscale-Genomics/mg-rest-adjacency.svg?branch=master)](https://travis-ci.org/Multiscale-Genomics/mg-rest-adjacency)
 
 Microservice RESTful API for the querying of Adjacency data stored in HDF5 files that have been generated using the code from the mg-storage-hdf5 / mg-process-fastq scripts
 
