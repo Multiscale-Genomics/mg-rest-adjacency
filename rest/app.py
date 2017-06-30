@@ -17,7 +17,7 @@
 from flask import Flask, make_response, request
 from flask_restful import Api, Resource
 
-from rest.hdf5_reader import hdf5
+from reader.hdf5_adjacency import adjacency
 
 APP = Flask(__name__)
 #app.config['DEBUG'] = False
@@ -197,7 +197,7 @@ class GetDetails(Resource):
         request_path = request.path
         rp = request_path.split("/")
 
-        h5 = hdf5(user_id, file_id)
+        h5 = adjacency(user_id, file_id)
         x = h5.get_details()
         h5.close()
         chr_param = x["chr_param"]
@@ -334,7 +334,7 @@ class GetInteractions(Resource):
             # ERROR - one of the parameters is not of integer type
             return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr})
 
-        h5 = hdf5(user_id, file_id, resolution)
+        h5 = adjacency(user_id, file_id, resolution)
         details = h5.get_details()
         #print("Details:", details)
 
@@ -452,7 +452,7 @@ class GetValue(Resource):
             # ERROR - one of the parameters is not of integer type
             return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y}), 400
 
-        h5 = hdf5(user_id, file_id, resolution)
+        h5 = adjacency(user_id, file_id, resolution)
         meta_data = h5.get_details()
         #print("chr_param:", meta_data["chr_param"])
         value = h5.get_value(pos_x, pos_y)
