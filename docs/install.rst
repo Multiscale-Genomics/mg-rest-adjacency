@@ -36,6 +36,7 @@ Directly from GitHub:
    git clone https://github.com/Multiscale-Genomics/mg-rest-adjacency.git
    cd mg-rest-adjacency/
    pip install -e .
+   pip install -r requirements.txt
 
 Using pip:
 

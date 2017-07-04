@@ -3,3 +3,4 @@ h5py
 flask
 flask_restful
 waitress
+git+git://github.com/Multiscale-Genomics/mg-dm-api.git
