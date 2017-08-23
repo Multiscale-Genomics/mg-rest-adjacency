@@ -1,5 +1,6 @@
 """
-.. Copyright 2017 EMBL-European Bioinformatics Institute
+.. See the NOTICE file distributed with this work for additional information
+   regarding copyright ownership.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,10 +17,7 @@
 
 from __future__ import print_function
 
-#import os
-#import tempfile
-#import json
-import pytest
+import pytest # pylint: disable=unused-import
 
 from reader.hdf5_adjacency import adjacency
 
@@ -28,7 +26,10 @@ def test_range():
     Test the range function
     """
     hdf5_handle = adjacency('test', '', 10000)
-    x = hdf5_handle.get_range('chr1', 100000, 200000, limit_chr='chr2')
-    print(x)
-    assert 'results' in x
-    assert len(x['results']) > 0
+    results = hdf5_handle.get_range('chr1', 100000, 200000, limit_chr='chr2')
+    print(results)
+
+    assert 'results' in results
+
+    r_size = len(results['results'])
+    assert r_size > 0
