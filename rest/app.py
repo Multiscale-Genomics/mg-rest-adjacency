@@ -20,6 +20,8 @@ from flask_restful import Api, Resource
 
 from reader.hdf5_adjacency import adjacency
 
+from rest.mg_auth import authorized
+
 APP = Flask(__name__)
 #app.config['DEBUG'] = False
 
@@ -152,7 +154,8 @@ class GetDetails(Resource):
     number of bins and available resolutions
     """
 
-    def get(self):
+    @authorized
+    def get(self, user_id):
         """
         GET List details from the file
 
@@ -181,37 +184,40 @@ class GetDetails(Resource):
            curl -X GET http://localhost:5001/mug/api/adjacency/details?user_id=test&file_id=test_file
 
         """
-        user_id = request.args.get('user_id')
-        file_id = request.args.get('file_id')
+        if user_id is not None:
+            file_id = request.args.get('file_id')
 
-        params_required = ['user_id', 'file_id']
-        params = [user_id, file_id]
+            params_required = ['user_id', 'file_id']
+            params = [user_id, file_id]
 
-        # Display the parameters available
-        if sum([x is None for x in params]) == len(params):
-            return help_usage(None, 200, params_required, {})
+            # Display the parameters available
+            if sum([x is None for x in params]) == len(params):
+                return help_usage(None, 200, params_required, {})
 
-        # ERROR - one of the required parameters is NoneType
-        if sum([x is not None for x in params]) != len(params):
-            return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id})
+            # ERROR - one of the required parameters is NoneType
+            if sum([x is not None for x in params]) != len(params):
+                return help_usage(
+                    'MissingParameters', 400, params_required,
+                    {'user_id' : user_id, 'file_id' : file_id}
+                )
 
-        request_path = request.path
-        rp = request_path.split("/")
+            #request_path = request.path
+            #rp = request_path.split("/")
 
-        h5 = adjacency(user_id, file_id)
-        x = h5.get_details()
-        h5.close()
-        chr_param = x["chr_param"]
+            hdf5_handle = adjacency(user_id, file_id)
+            h5_data = hdf5_handle.get_details()
+            hdf5_handle.close()
 
+            return {
+                '_links': {
+                    '_self': request.base_url,
+                    '_parent': request.url_root + 'mug/api/adjacency'
+                },
+                'chromosomes' : [{'chromosome' : c[0], 'length' : c[1]} for c in h5_data["chromosomes"]],
+                'resolutions' : h5_data['resolutions']
+            }
 
-        return {
-            '_links': {
-                '_self': request.base_url,
-                '_parent': request.url_root + 'mug/api/adjacency'
-            },
-            'chromosomes' : [{'chromosome' : c[0], 'length' : c[1]} for c in x["chromosomes"]],
-            'resolutions' : x['resolutions']
-        }
+        return help_usage('Forbidden', 403, ['file_id'], {})
 
 
 class GetInteractions(Resource):
@@ -220,7 +226,8 @@ class GetInteractions(Resource):
     a given dataset
     """
 
-    def get(self):
+    @authorized
+    def get(self, user_id):
         """
         GET List details from the file
 
@@ -305,78 +312,126 @@ class GetInteractions(Resource):
         5. Value
 
         """
-        user_id = request.args.get('user_id')
-        file_id = request.args.get('file_id')
-        chr_id = request.args.get('chr')
-        start = request.args.get('start')
-        end = request.args.get('end')
-        resolution = request.args.get('res')
-        limit_chr = request.args.get('limit_chr')
-        limit_start = request.args.get('limit_start')
-        limit_end = request.args.get('limit_end')
-        no_links = request.args.get('no_links')
+        if user_id is not None:
+            file_id = request.args.get('file_id')
+            chr_id = request.args.get('chr')
+            start = request.args.get('start')
+            end = request.args.get('end')
+            resolution = request.args.get('res')
+            limit_chr = request.args.get('limit_chr')
+            limit_start = request.args.get('limit_start')
+            limit_end = request.args.get('limit_end')
+            no_links = request.args.get('no_links')
 
-        params_required = ['user_id', 'file_id', 'chr_id', 'start', 'end', 'res', 'limit_chr', 'limit_start', 'limit_end']
-        params = [user_id, file_id, chr_id, start, end, resolution]
+            params_required = [
+                'user_id', 'file_id', 'chr_id', 'start', 'end', 'res',
+                'limit_chr', 'limit_start', 'limit_end']
+            params = [user_id, file_id, chr_id, start, end, resolution]
 
-        # Display the parameters available
-        if sum([x is None for x in params]) == len(params):
-            return help_usage(None, 200, params_required, {})
+            # Display the parameters available
+            if sum([x is None for x in params]) == len(params):
+                return help_usage(None, 200, params_required, {})
 
-        # ERROR - one of the required parameters is NoneType
-        if sum([x is not None for x in params]) != len(params):
-            return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end}), 400
+            # ERROR - one of the required parameters is NoneType
+            if sum([x is not None for x in params]) != len(params):
+                return help_usage(
+                    'MissingParameters', 400, params_required,
+                    {
+                        'user_id' : user_id, 'file_id' : file_id,
+                        'chr' : chr_id, 'start' : start, 'end' : end,
+                        'res' : resolution, 'limit_chr' : limit_chr,
+                        'limit_start' : limit_start, 'limit_end' : limit_end
+                    }
+                )
 
-        try:
-            start = int(start)
-            end = int(end)
-            resolution = int(resolution)
-        except ValueError as e:
-            # ERROR - one of the parameters is not of integer type
-            return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr})
-
-        h5 = adjacency(user_id, file_id, resolution)
-        details = h5.get_details()
-        #print("Details:", details)
-
-        # ERROR - the requested resolution is not available
-        if resolution not in details["resolutions"]:
-            return help_usage('Resolution Not Available', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
-
-        if limit_start is not None or limit_end is not None:
-            if limit_chr is None:
-                return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
             try:
-                limit_start = int(limit_start)
-                limit_end = int(limit_end)
-            except ValueError as e:
+                start = int(start)
+                end = int(end)
+                resolution = int(resolution)
+            except ValueError:
                 # ERROR - one of the parameters is not of integer type
-                return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'chr' : chr_id, 'start' : start, 'end' : end, 'res' : resolution, 'limit_chr' : limit_chr, 'limit_start' : limit_start, 'limit_end' : limit_end})
+                return help_usage(
+                    'IncorrectParameterType', 400, params_required,
+                    {
+                        'user_id' : user_id, 'file_id' : file_id,
+                        'chr' : chr_id, 'start' : start, 'end' : end,
+                        'res' : resolution, 'limit_chr' : limit_chr
+                    }
+                )
 
-        request_path = request.path
-        rp = request_path.split("/")
-        value_url = request.url_root + 'mug/api/adjacency/getValue'
+            hdf5_handle = adjacency(user_id, file_id, resolution)
+            details = hdf5_handle.get_details()
+            #print("Details:", details)
 
-        x = h5.get_range(chr_id, start, end, limit_chr, limit_start, limit_end, value_url, no_links)
-        h5.close()
-        #app.logger.warn(x["log"])
+            # ERROR - the requested resolution is not available
+            if resolution not in details["resolutions"]:
+                return help_usage(
+                    'Resolution Not Available', 400, params_required,
+                    {
+                        'user_id' : user_id, 'file_id' : file_id,
+                        'chr' : chr_id, 'start' : start, 'end' : end,
+                        'res' : resolution, 'limit_chr' : limit_chr,
+                        'limit_start' : limit_start, 'limit_end' : limit_end
+                    }
+                )
 
-        return {
-            '_links': {
-                '_self': request.url,
-                '_parent': request.url_root + 'mug/api/adjacency'
-            },
-            'resolution': resolution,
-            'chr': chr_id,
-            'start': start,
-            'end': end,
-            'limit_chr': limit_chr,
-            'limit_start' : limit_start,
-            'limit_end' : limit_end,
-            'interaction_count': len(x["results"]),
-            'values': x["results"],
-            'log': x["log"]
-        }
+            if limit_start is not None or limit_end is not None:
+                if limit_chr is None:
+                    return help_usage(
+                        'MissingParameters', 400, params_required,
+                        {
+                            'user_id' : user_id, 'file_id' : file_id,
+                            'chr' : chr_id, 'start' : start, 'end' : end,
+                            'res' : resolution, 'limit_chr' : limit_chr,
+                            'limit_start' : limit_start, 'limit_end' : limit_end
+                        }
+                    )
+                try:
+                    limit_start = int(limit_start)
+                    limit_end = int(limit_end)
+                except ValueError:
+                    # ERROR - one of the parameters is not of integer type
+                    return help_usage(
+                        'IncorrectParameterType', 400, params_required,
+                        {
+                            'user_id' : user_id, 'file_id' : file_id,
+                            'chr' : chr_id, 'start' : start, 'end' : end,
+                            'res' : resolution, 'limit_chr' : limit_chr,
+                            'limit_start' : limit_start, 'limit_end' : limit_end
+                        }
+                    )
+
+            value_url = request.url_root + 'mug/api/adjacency/getValue'
+
+            h5_data = hdf5_handle.get_range(
+                chr_id, start, end, limit_chr, limit_start, limit_end,
+                value_url, no_links)
+            hdf5_handle.close()
+            #app.logger.warn(h5_data["log"])
+
+            return {
+                '_links': {
+                    '_self': request.url,
+                    '_parent': request.url_root + 'mug/api/adjacency'
+                },
+                'resolution': resolution,
+                'chr': chr_id,
+                'start': start,
+                'end': end,
+                'limit_chr': limit_chr,
+                'limit_start' : limit_start,
+                'limit_end' : limit_end,
+                'interaction_count': len(h5_data["results"]),
+                'values': h5_data["results"],
+                'log': h5_data["log"]
+            }
+
+        return help_usage(
+            'Forbidden', 403,
+            [
+                'file_id', 'chr_id', 'start', 'end', 'res',
+                'limit_chr', 'limit_start', 'limit_end'
+            ], {})
 
 class GetValue(Resource):
     """
@@ -384,7 +439,8 @@ class GetValue(Resource):
     dataset
     """
 
-    def get(self):
+    @authorized
+    def get(self, user_id):
         """
         GET single value
 
@@ -428,55 +484,66 @@ class GetValue(Resource):
 
            curl -X GET http://localhost:5001/mug/api/adjacency/getValue?user_id=test&file_id=test_file&chr=<chr_id>&res=<res>
         """
-        user_id = request.args.get('user_id')
-        file_id = request.args.get('file_id')
-        resolution = request.args.get('res')
-        pos_x = request.args.get('pos_x')
-        pos_y = request.args.get('pos_y')
+        if user_id is not None:
+            file_id = request.args.get('file_id')
+            resolution = request.args.get('res')
+            pos_x = request.args.get('pos_x')
+            pos_y = request.args.get('pos_y')
 
-        params_required = ['user_id', 'file_id', 'res', 'pos_x', 'pos_y']
-        params = [user_id, file_id, resolution, pos_x, pos_y]
+            params_required = ['user_id', 'file_id', 'res', 'pos_x', 'pos_y']
+            params = [user_id, file_id, resolution, pos_x, pos_y]
 
-        # Display the parameters available
-        if sum([x is None for x in params]) == len(params):
-            return help_usage(None, 200, params_required, {})
+            # Display the parameters available
+            if sum([x is None for x in params]) == len(params):
+                return help_usage(None, 200, params_required, {})
 
-        # ERROR - one of the required parameters is NoneType
-        if sum([x is not None for x in params]) != len(params):
-            return help_usage('MissingParameters', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y}), 400
+            # ERROR - one of the required parameters is NoneType
+            if sum([x is not None for x in params]) != len(params):
+                return help_usage(
+                    'MissingParameters', 400, params_required,
+                    {
+                        'user_id' : user_id, 'file_id' : file_id,
+                        'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y
+                    }
+                )
 
-        try:
-            pos_x = int(pos_x)
-            pos_y = int(pos_y)
-            resolution = int(resolution)
-        except ValueError as e:
-            # ERROR - one of the parameters is not of integer type
-            return help_usage('IncorrectParameterType', 400, params_required, {'user_id' : user_id, 'file_id' : file_id, 'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y}), 400
+            try:
+                pos_x = int(pos_x)
+                pos_y = int(pos_y)
+                resolution = int(resolution)
+            except ValueError:
+                # ERROR - one of the parameters is not of integer type
+                return help_usage(
+                    'IncorrectParameterType', 400, params_required,
+                    {
+                        'user_id' : user_id, 'file_id' : file_id,
+                        'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y
+                    }
+                )
 
-        h5 = adjacency(user_id, file_id, resolution)
-        meta_data = h5.get_details()
-        #print("chr_param:", meta_data["chr_param"])
-        value = h5.get_value(pos_x, pos_y)
+            h5_handle = adjacency(user_id, file_id, resolution)
+            #meta_data = h5.get_details()
+            #print("chr_param:", meta_data["chr_param"])
+            value = h5_handle.get_value(pos_x, pos_y)
 
-        chrA_id = h5.get_chromosome_from_array_index(pos_x)
-        chrB_id = h5.get_chromosome_from_array_index(pos_y)
+            chr_a_id = h5_handle.get_chromosome_from_array_index(pos_x)
+            chr_b_id = h5_handle.get_chromosome_from_array_index(pos_y)
 
-        h5.close()
+            h5_handle.close()
 
-        request_path = request.path
-        rp = request_path.split("/")
+            return {
+                '_links': {
+                    '_self': request.url_root + 'mug/api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(pos_x) + "&pos_y=" + str(pos_y)
+                },
+                'chrA': chr_a_id,
+                'chrB': chr_b_id,
+                'resolution': resolution,
+                'pos_x': pos_x,
+                'pos_y': pos_y,
+                'value': int(value)
+            }
 
-        return {
-            '_links': {
-                '_self': request.url_root + 'mug/api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(pos_x) + "&pos_y=" + str(pos_y)
-            },
-            'chrA': chrA_id,
-            'chrB': chrB_id,
-            'resolution': resolution,
-            'pos_x': pos_x,
-            'pos_y': pos_y,
-            'value': int(value)
-        }
+        return help_usage('Forbidden', 403, ['file_id', 'res', 'pos_x', 'pos_y'], {})
 
 class Ping(Resource):
     """
