@@ -20,7 +20,7 @@ from flask_restful import Api, Resource
 
 from reader.hdf5_adjacency import adjacency
 
-from rest.mg_auth import authorized
+from mg_rest_util.mg_auth import authorized
 
 APP = Flask(__name__)
 #app.config['DEBUG'] = False
