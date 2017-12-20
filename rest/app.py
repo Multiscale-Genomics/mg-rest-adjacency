@@ -15,15 +15,21 @@
    limitations under the License.
 """
 
+from __future__ import print_function
+
+import os
+import sys
+
 from flask import Flask, make_response, request
 from flask_restful import Api, Resource
 
+from dmp import dmp
 from reader.hdf5_adjacency import adjacency
 
 from mg_rest_util.mg_auth import authorized
 
 APP = Flask(__name__)
-#app.config['DEBUG'] = False
+# APP.config['DEBUG'] = True
 
 REST_API = Api(APP)
 
@@ -41,7 +47,6 @@ def output_tsv(data, code, headers=None):
         resp = make_response(outstr, code)
         resp.headers.extend(headers or {})
         return resp
-
 
 def help_usage(error_message, status_code,
                parameters_required, parameters_provided):
@@ -74,24 +79,23 @@ def help_usage(error_message, status_code,
         JSON formated status message to display to the user
     """
     parameters = {
-        'user_id' : ['User ID', 'str', 'REQUIRED'],
-        'file_id' : ['File ID', 'str', 'REQUIRED'],
-        'chrom' : ['Chromosome', 'str', 'REQUIRED'],
-        'start' : ['Start', 'int', 'REQUIRED'],
-        'end' : ['End', 'int', 'REQUIRED'],
-        'res'     : ['Resolution', 'int', 'REQUIRED'],
-        'limit_chr' : [
-            'Limit interactions to interacting with a specific chromosome',
-            'str', 'OPTIONAL'],
-        'limit_start' : [
-            'Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_end are defined',
-            'int', 'OPTIONAL'],
-        'limit_end' : [
-            'Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_start are defined',
-            'int', 'OPTIONAL'],
-        'pos_x' : ['Position i', 'int', 'REQUIRED'],
-        'pos_y' : ['Position j', 'int', 'REQUIRED'],
-        'type' : ['add_meta|remove_meta', 'str', 'REQUIRED']
+        "file_id" : ["File ID", "str", "REQUIRED"],
+        "chrom" : ["Chromosome", "str", "REQUIRED"],
+        "start" : ["Start", "int", "REQUIRED"],
+        "end" : ["End", "int", "REQUIRED"],
+        "res"     : ["Resolution", "int", "REQUIRED"],
+        "limit_chr" : [
+            "Limit interactions to interacting with a specific chromosome",
+            "str", "OPTIONAL"],
+        "limit_start" : [
+            "Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_end are defined",
+            "int", "OPTIONAL"],
+        "limit_end" : [
+            "Limits interactions based on a region within the chromosome defined by the limit_chr parameter. REQUIRES that limit_chr and limit_start are defined",
+            "int", "OPTIONAL"],
+        "pos_x" : ["Position i", "int", "REQUIRED"],
+        "pos_y" : ["Position j", "int", "REQUIRED"],
+        "type" : ["add_meta|remove_meta", "str", "REQUIRED"]
     }
 
     used_param = {k : parameters[k] for k in parameters_required if k in parameters}
@@ -181,30 +185,33 @@ class GetDetails(Resource):
         .. code-block:: none
            :linenos:
 
-           curl -X GET http://localhost:5001/mug/api/adjacency/details?user_id=test&file_id=test_file
+           curl -X GET
+               -H "Authorization: Bearer teststring"
+               http://localhost:5001/mug/api/adjacency/details?file_id=test_file
 
         """
         if user_id is not None:
             file_id = request.args.get('file_id')
 
-            params_required = ['user_id', 'file_id']
+            params_required = ['file_id']
             params = [user_id, file_id]
 
             # Display the parameters available
             if sum([x is None for x in params]) == len(params):
-                return help_usage(None, 200, params_required, {})
+                return {"usage": "test"}
+                #return help_usage(None, 200, params_required, {})
 
             # ERROR - one of the required parameters is NoneType
             if sum([x is not None for x in params]) != len(params):
                 return help_usage(
                     'MissingParameters', 400, params_required,
-                    {'user_id' : user_id, 'file_id' : file_id}
+                    {'file_id' : file_id}
                 )
 
             #request_path = request.path
             #rp = request_path.split("/")
 
-            hdf5_handle = adjacency(user_id, file_id)
+            hdf5_handle = adjacency(user_id["user_id"], file_id)
             h5_data = hdf5_handle.get_details()
             hdf5_handle.close()
 
@@ -213,11 +220,13 @@ class GetDetails(Resource):
                     '_self': request.base_url,
                     '_parent': request.url_root + 'mug/api/adjacency'
                 },
-                'chromosomes' : [{'chromosome' : c[0], 'length' : c[1]} for c in h5_data["chromosomes"]],
+                'chromosomes' : [
+                    {'chromosome' : c[0], 'length' : c[1]} for c in h5_data["chromosomes"]
+                ],
                 'resolutions' : h5_data['resolutions']
             }
 
-        return help_usage('Forbidden', 403, ['file_id'], {})
+        return help_usage('Forbidden', 403, params_required, {})
 
 
 class GetInteractions(Resource):
@@ -289,7 +298,9 @@ class GetInteractions(Resource):
         .. code-block:: none
            :linenos:
 
-           curl -X GET http://localhost:5001/mug/api/adjacency/getInteractions?user_id=test&file_id=test_file&chr=<chr_id>&res=<res>
+           curl -X GET
+               -H "Authorization: Bearer teststring"
+               http://localhost:5001/mug/api/adjacency/getInteractions?file_id=test_file&chr=<chr_id>&res=<res>
 
         Notes
         -----
@@ -300,7 +311,10 @@ class GetInteractions(Resource):
         .. code-block:: none
            :linenos:
 
-           curl -X GET --header "Accept: application/tsv" http://localhost:5001/mug/api/adjacency/getInteractions?user_id=test&file_id=test_file&chr=<chr_id>&res=<res>
+           curl -X GET
+               -H "Accept: application/tsv"
+               -H "Authorization: Bearer teststring"
+               http://localhost:5001/mug/api/adjacency/getInteractions?file_id=test_file&chr=<chr_id>&res=<res>
 
 
         This will return the values from the JSON format in the following order
@@ -337,7 +351,7 @@ class GetInteractions(Resource):
                 return help_usage(
                     'MissingParameters', 400, params_required,
                     {
-                        'user_id' : user_id, 'file_id' : file_id,
+                        'file_id' : file_id,
                         'chr' : chr_id, 'start' : start, 'end' : end,
                         'res' : resolution, 'limit_chr' : limit_chr,
                         'limit_start' : limit_start, 'limit_end' : limit_end
@@ -353,13 +367,13 @@ class GetInteractions(Resource):
                 return help_usage(
                     'IncorrectParameterType', 400, params_required,
                     {
-                        'user_id' : user_id, 'file_id' : file_id,
+                        'file_id' : file_id,
                         'chr' : chr_id, 'start' : start, 'end' : end,
                         'res' : resolution, 'limit_chr' : limit_chr
                     }
                 )
 
-            hdf5_handle = adjacency(user_id, file_id, resolution)
+            hdf5_handle = adjacency(user_id["user_id"], file_id, resolution)
             details = hdf5_handle.get_details()
             #print("Details:", details)
 
@@ -368,7 +382,7 @@ class GetInteractions(Resource):
                 return help_usage(
                     'Resolution Not Available', 400, params_required,
                     {
-                        'user_id' : user_id, 'file_id' : file_id,
+                        'file_id' : file_id,
                         'chr' : chr_id, 'start' : start, 'end' : end,
                         'res' : resolution, 'limit_chr' : limit_chr,
                         'limit_start' : limit_start, 'limit_end' : limit_end
@@ -380,7 +394,7 @@ class GetInteractions(Resource):
                     return help_usage(
                         'MissingParameters', 400, params_required,
                         {
-                            'user_id' : user_id, 'file_id' : file_id,
+                            'file_id' : file_id,
                             'chr' : chr_id, 'start' : start, 'end' : end,
                             'res' : resolution, 'limit_chr' : limit_chr,
                             'limit_start' : limit_start, 'limit_end' : limit_end
@@ -394,7 +408,7 @@ class GetInteractions(Resource):
                     return help_usage(
                         'IncorrectParameterType', 400, params_required,
                         {
-                            'user_id' : user_id, 'file_id' : file_id,
+                            'file_id' : file_id,
                             'chr' : chr_id, 'start' : start, 'end' : end,
                             'res' : resolution, 'limit_chr' : limit_chr,
                             'limit_start' : limit_start, 'limit_end' : limit_end
@@ -482,7 +496,9 @@ class GetValue(Resource):
         .. code-block:: none
            :linenos:
 
-           curl -X GET http://localhost:5001/mug/api/adjacency/getValue?user_id=test&file_id=test_file&chr=<chr_id>&res=<res>
+           curl -X GET
+               -H "Authorization: Bearer teststring"
+               http://localhost:5001/mug/api/adjacency/getValue?file_id=test_file&chr=<chr_id>&res=<res>
         """
         if user_id is not None:
             file_id = request.args.get('file_id')
@@ -502,7 +518,7 @@ class GetValue(Resource):
                 return help_usage(
                     'MissingParameters', 400, params_required,
                     {
-                        'user_id' : user_id, 'file_id' : file_id,
+                        'file_id' : file_id,
                         'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y
                     }
                 )
@@ -516,12 +532,12 @@ class GetValue(Resource):
                 return help_usage(
                     'IncorrectParameterType', 400, params_required,
                     {
-                        'user_id' : user_id, 'file_id' : file_id,
+                        'file_id' : file_id,
                         'resolution' : resolution, 'pos_x' : pos_x, 'pos_y' : pos_y
                     }
                 )
 
-            h5_handle = adjacency(user_id, file_id, resolution)
+            h5_handle = adjacency(user_id["user_id"], file_id, resolution)
             #meta_data = h5.get_details()
             #print("chr_param:", meta_data["chr_param"])
             value = h5_handle.get_value(pos_x, pos_y)
@@ -532,18 +548,18 @@ class GetValue(Resource):
             h5_handle.close()
 
             return {
-                '_links': {
-                    '_self': request.url_root + 'mug/api/adjacency/getValue?user_id=' + str(user_id) + "&file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(pos_x) + "&pos_y=" + str(pos_y)
+                "_links": {
+                    "_self": request.url_root + "mug/api/adjacency/getValue?file_id=" + str(file_id) + "&res=" + str(resolution) + "&pos_x=" + str(pos_x) + "&pos_y=" + str(pos_y)
                 },
-                'chrA': chr_a_id,
-                'chrB': chr_b_id,
-                'resolution': resolution,
-                'pos_x': pos_x,
-                'pos_y': pos_y,
-                'value': int(value)
+                "chrA": chr_a_id,
+                "chrB": chr_b_id,
+                "resolution": resolution,
+                "pos_x": pos_x,
+                "pos_y": pos_y,
+                "value": int(value)
             }
 
-        return help_usage('Forbidden', 403, ['file_id', 'res', 'pos_x', 'pos_y'], {})
+        return help_usage("Forbidden", 403, ["file_id", "res", "pos_x", "pos_y"], {})
 
 class Ping(Resource):
     """
@@ -580,6 +596,14 @@ class Ping(Resource):
             }
         }
         return res
+
+#
+# For the services where there needs to be an extra layer (adjacency lists),
+# then there needs to be a way of forwarding for this. But the majority of
+# things can be redirected to the raw files for use as a track.
+#
+
+sys._auth_meta_json = os.path.dirname(os.path.realpath(__file__)) + '/auth_meta.json'
 
 # Define the URIs and their matching methods
 

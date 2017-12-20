@@ -63,9 +63,11 @@ def test_details(client):
     """
     Test the details endpoint to ensure it returns the usage element
     """
-    rest_value = client.get('/mug/api/adjacency/details')
+    rest_value = client.get(
+        '/mug/api/adjacency/details',
+        headers=dict(Authorization='Authorization: Bearer teststring')
+    )
     details = json.loads(rest_value.data)
-    print(details)
     assert 'usage' in details
 
 def test_details_00(client):
@@ -73,7 +75,10 @@ def test_details_00(client):
     Test that details endpoint includes a resolution value when a test user and
     file are specified
     """
-    rest_value = client.get('/mug/api/adjacency/details?user_id=test&file_id=test')
+    rest_value = client.get(
+        '/mug/api/adjacency/details?file_id=test',
+        headers=dict(Authorization='Authorization: Bearer teststring')
+    )
     details = json.loads(rest_value.data)
     print(details)
     assert 'resolutions' in details
@@ -83,7 +88,10 @@ def test_details_01(client):
     Test that details endpoint includes 3 resolution values when a test user and
     file are specified
     """
-    rest_value = client.get('/mug/api/adjacency/details?user_id=test&file_id=test')
+    rest_value = client.get(
+        '/mug/api/adjacency/details?file_id=test',
+        headers=dict(Authorization='Authorization: Bearer teststring')
+    )
     details = json.loads(rest_value.data)
     print(details)
     assert len(details['resolutions']) == 3
@@ -92,7 +100,10 @@ def test_getinteractions(client):
     """
     Test the interactions endpoint to ensure it returns the usage element
     """
-    rest_value = client.get('/mug/api/adjacency/getInteractions')
+    rest_value = client.get(
+        '/mug/api/adjacency/getInteractions',
+        headers=dict(Authorization='Authorization: Bearer teststring')
+    )
     details = json.loads(rest_value.data)
     print(details)
     assert 'usage' in details
@@ -102,7 +113,10 @@ def test_getinteractions_00(client):
     Test that interactions returns a values block when test parameters are
     provided
     """
-    rest_value = client.get('/mug/api/adjacency/getInteractions?user_id=test&file_id=test&chr=chr1&res=10000&start=100000&end=200000')
+    rest_value = client.get(
+        '/mug/api/adjacency/getInteractions?file_id=test&chr=chr1&res=10000&start=100000&end=200000',
+        headers=dict(Authorization='Authorization: Bearer teststring')
+    )
     details = json.loads(rest_value.data)
     print('TEST - getinteractions_00:', details.keys())
     assert 'values' in details
@@ -112,7 +126,10 @@ def test_getinteractions_01(client):
     Test that interactions returns a known number of values when test parameters
     are provided
     """
-    rest_value = client.get('/mug/api/adjacency/getInteractions?user_id=test&file_id=test&chr=chr1&res=10000&start=100000&end=200000')
+    rest_value = client.get(
+        '/mug/api/adjacency/getInteractions?file_id=test&chr=chr1&res=10000&start=100000&end=200000',
+        headers=dict(Authorization='Authorization: Bearer teststring')
+    )
     details = json.loads(rest_value.data)
     print('TEST - getinteractions_01:', details.keys())
     value_count = len(details['values'])
@@ -122,7 +139,10 @@ def test_getvalue(client):
     """
     Test the values endpoint to ensure it returns the usage element
     """
-    rest_value = client.get('/mug/api/adjacency/getValue')
+    rest_value = client.get(
+        '/mug/api/adjacency/getValue',
+        headers=dict(Authorization='Authorization: Bearer teststring')
+    )
     details = json.loads(rest_value.data)
     print(details)
     assert 'usage' in details
@@ -132,13 +152,19 @@ def test_getvalue_00(client):
     Test that values returns with a value element when test parameters are
     provided
     """
-    rest_interactions = client.get('/mug/api/adjacency/getInteractions?user_id=test&file_id=test&chr=chr1&res=10000&start=100000&end=200000')
+    rest_interactions = client.get(
+        '/mug/api/adjacency/getInteractions?file_id=test&chr=chr1&res=10000&start=100000&end=200000',
+        headers=dict(Authorization='Authorization: Bearer teststring')
+    )
     interaction_details = json.loads(rest_interactions.data)
     print(interaction_details['values'][0])
     pos_x = interaction_details['values'][0]['pos_x']
     pos_y = interaction_details['values'][0]['pos_y']
 
-    rest_value = client.get('/mug/api/adjacency/getValue?user_id=test&file_id=test&res=10000&pos_x=' + str(pos_x) + '&pos_y=' + str(pos_y))
+    rest_value = client.get(
+        '/mug/api/adjacency/getValue?file_id=test&res=10000&pos_x=' + str(pos_x) + '&pos_y=' + str(pos_y),
+        headers=dict(Authorization='Authorization: Bearer teststring')
+    )
     value_details = json.loads(rest_value.data)
     print(value_details)
     assert 'value' in value_details
